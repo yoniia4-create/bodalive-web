@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BodaLive — Invitación</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+  :root {
+    --primary: #2D4A3E;
+    --primary-dark: #1E332A;
+    --gold: #C9A96E;
+    --rose: #F0E6E0;
+    --cream: #FDFAF6;
+    --text: #2A2A28;
+    --text-soft: #857F78;
+    --border: #E8E0D8;
+    --danger: #9B5E5E;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #E9E4DC;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app-shell {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--cream);
+    position: relative;
+    overflow-x: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+  }
+
+  .screen { animation: fadeIn 0.5s ease; }
+  .hidden { display: none !important; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Pantalla 1 ---------- */
+  #screen1 {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 28px;
+  }
+
+  .logo-wrap { text-align: center; margin-bottom: 40px; }
+
+  .logo-name {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 38px;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .entry-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 22px;
+    box-shadow: 0 8px 24px rgba(45,74,62,0.08);
+  }
+
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .code-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: var(--cream);
+    margin-bottom: 20px;
+  }
+  .code-input:focus { outline: none; border-color: var(--gold); }
+
+  .phone-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+  .phone-prefix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: var(--cream);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .phone-input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--cream);
+    min-width: 0;
+  }
+  .phone-input:focus { outline: none; border-color: var(--gold); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+
+  .btn-primary { background: var(--primary); color: #fff; width: 100%; margin-top: 22px; }
+  .btn-gold { background: var(--gold); color: #fff; }
+  .btn-outline { background: #fff; color: var(--primary); border: 1.5px solid var(--border); }
+  .btn-block { width: 100%; }
+
+  .error-msg {
+    margin-top: 14px;
+    background: #FBEDEC;
+    border: 1px solid #E7C6C3;
+    color: var(--danger);
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  /* ---------- Pantalla 2: Hero ---------- */
+  .hero {
+    background: var(--primary);
+    padding: 56px 24px 40px;
+    text-align: center;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(201,169,110,0.85);
+    margin-bottom: 14px;
+  }
+
+  .hero-names {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 40px;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 24px;
+  }
+
+  .countdown {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .cd-item { min-width: 52px; text-align: center; }
+  .cd-num {
+    font-size: 30px;
+    font-weight: 300;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+  }
+  .cd-sep { font-size: 22px; color: rgba(255,255,255,0.3); padding-top: 4px; }
+
+  .hero-date {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    text-transform: capitalize;
+  }
+
+  /* ---------- Botones + acordeón ---------- */
+  .btns-section { padding: 28px 20px 8px; background: var(--cream); }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .grid-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 10px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .grid-btn:active { transform: scale(0.98); }
+  .grid-btn-icon { font-size: 22px; line-height: 1; }
+  .grid-btn-label { font-size: 13px; font-weight: 600; color: var(--text); text-align: center; }
+
+  .grid-btn.panel-open {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(201,169,110,0.2) inset;
+  }
+
+  .grid-btn-gold { background: var(--gold); border-color: var(--gold); }
+  .grid-btn-gold .grid-btn-label { color: var(--primary); }
+  .grid-btn-gold.panel-open { box-shadow: 0 0 0 2px rgba(45,74,62,0.3) inset; }
+
+  .acc-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .acc-panel-inner { padding-top: 16px; padding-bottom: 4px; }
+
+  .empty-note {
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    padding: 20px;
+  }
+
+  /* Cómo llegar */
+  .llegar-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .llegar-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .llegar-time { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 2px; }
+  .llegar-date { font-size: 12.5px; color: var(--text-soft); margin-bottom: 2px; text-transform: capitalize; }
+  .llegar-addr { font-size: 12.5px; color: var(--text-soft); line-height: 1.4; margin-bottom: 12px; }
+  .llegar-map {
+    width: 100%;
+    height: 150px;
+    border: 0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  /* RSVP */
+  .rsvp-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .opt-row { display: flex; gap: 10px; margin-bottom: 4px; }
+  .opt-btn {
+    flex: 1;
+    padding: 14px 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+    cursor: pointer;
+    text-align: center;
+  }
+  .opt-btn.active-yes { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .opt-btn.active-no { background: #F0E6E0; border-color: var(--danger); color: var(--danger); }
+  .opt-btn.active-num { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .menu-col { display: flex; flex-direction: column; gap: 8px; }
+  .menu-opt {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: #fff; cursor: pointer; font-size: 14px; color: var(--text);
+  }
+  .menu-opt.active-menu { background: #FFF9F0; border-color: var(--gold); color: var(--primary); }
+
+  .text-input, .textarea-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font-size: 14.5px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: var(--cream);
+  }
+  .text-input:focus, .textarea-input:focus { outline: none; border-color: var(--gold); }
+  .textarea-input { min-height: 90px; resize: vertical; }
+
+  .field-gap { margin-bottom: 12px; }
+
+  .success-box { text-align: center; padding: 20px 4px; }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .success-sub { font-size: 14px; color: var(--text-soft); line-height: 1.5; }
+
+  /* Regalos */
+  .gift-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .gift-top { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+  .gift-emoji {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--rose); display: flex; align-items: center; justify-content: center;
+    font-size: 21px; min-width: 44px;
+  }
+  .gift-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .gift-price { font-size: 13px; color: var(--text-soft); }
+
+  .progress-track {
+    height: 7px; border-radius: 99px; background: var(--rose);
+    overflow: hidden; margin-bottom: 6px;
+  }
+  .progress-fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.4s ease; }
+  .progress-label { font-size: 11.5px; color: var(--gold); font-weight: 500; margin-bottom: 12px; }
+
+  .badge-reserved {
+    display: inline-block;
+    background: #E5E1DB;
+    color: #726C64;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 0;
+    border-radius: 10px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .mp-card {
+    background: #fff;
+    border: 1.5px solid var(--gold);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .mp-title { font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+  .mp-alias { font-size: 21px; font-weight: 700; letter-spacing: 1px; color: var(--gold); margin-bottom: 4px; word-break: break-all; }
+  .mp-sub { font-size: 12px; color: var(--text-soft); margin-bottom: 14px; }
+  .copy-toast { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 10px; height: 14px; }
+
+  /* Bajate la app */
+  .app-badge {
+    display: inline-block;
+    background: var(--rose);
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    border-radius: 99px;
+    margin-bottom: 14px;
+  }
+  .app-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--primary);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .app-subtitle { font-size: 13.5px; color: var(--text-soft); line-height: 1.55; margin-bottom: 18px; }
+  .app-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .app-feature { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px 6px; text-align: center; }
+  .app-feature-icon { display: block; font-size: 20px; margin-bottom: 6px; }
+  .app-feature-label { font-size: 11px; font-weight: 600; color: var(--text); }
+  .btn-download { background: var(--primary); color: #fff; font-size: 15.5px; padding: 17px; border-radius: 14px; margin-bottom: 16px; }
+  .app-code-card { background: #fff; border: 1.5px solid var(--gold); border-radius: 14px; padding: 18px; text-align: center; }
+  .app-code-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-soft); margin-bottom: 6px; }
+  .app-code-value { font-family: 'Playfair Display', serif; font-style: italic; font-size: 28px; color: var(--gold); letter-spacing: 2px; }
+
+  /* Próximos eventos */
+  .section { padding: 32px 20px 30px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .section-divider { height: 1px; background: var(--border); margin: 0 24px; }
+
+  .proximo-row { display: flex; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+  .proximo-row:last-child { border-bottom: none; }
+  .proximo-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex: none; }
+  .dot-gold { background: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.2); }
+  .dot-gray { background: #C7C1B8; }
+  .proximo-info { flex: 1; min-width: 0; }
+  .proximo-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .proximo-when { font-size: 12.5px; font-weight: 600; color: var(--text-soft); margin-bottom: 2px; text-transform: capitalize; }
+  .proximo-addr { font-size: 12px; color: var(--text-soft); line-height: 1.4; }
+
+  /* Modal aportar */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(30,25,20,0.5);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 100;
+  }
+  .modal-card {
+    width: 100%; max-width: 480px; background: var(--cream);
+    border-radius: 20px 20px 0 0; padding: 26px 22px 30px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .modal-close { font-size: 13px; color: var(--gold); cursor: pointer; background: none; border: none; font-weight: 600; }
+  .modal-note { font-size: 13px; color: var(--text-soft); line-height: 1.5; margin: 16px 0 20px; }
+  .modal-note b { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ================= PANTALLA 1 ================= -->
+  <div id="screen1" class="screen">
+    <div class="logo-wrap">
+      <div class="logo-name">BodaLive</div>
+      <div class="logo-sub">Tu boda, en un solo lugar</div>
+    </div>
+
+    <div class="entry-card">
+      <label class="field-label" for="inputCode">Código de la boda</label>
+      <input id="inputCode" class="code-input" type="text" maxlength="10" autocapitalize="characters">
+
+      <label class="field-label" for="inputPhone">Tu número de celular</label>
+      <div class="phone-row">
+        <div class="phone-prefix">+54</div>
+        <input id="inputPhone" class="phone-input" type="tel" placeholder="11 2345 6789" inputmode="numeric">
+      </div>
+
+      <button id="btnJoin" class="btn btn-primary" onclick="handleJoin()">Ingresar a la boda</button>
+
+      <div id="joinError" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- ================= PANTALLA 2 ================= -->
+  <div id="screen2" class="screen hidden">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">Los invitan a celebrar</div>
+      <div class="hero-names" id="heroNames">&nbsp;</div>
+      <div class="countdown" id="countdown">
+        <div class="cd-item"><div class="cd-num" id="cdDays">0</div><div class="cd-label">días</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item"><div class="cd-num" id="cdHours">00</div><div class="cd-label">hs</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item"><div class="cd-num" id="cdMinutes">00</div><div class="cd-label">min</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-item"><div class="cd-num" id="cdSeconds">00</div><div class="cd-label">seg</div></div>
+      </div>
+      <div class="hero-date" id="heroDate"></div>
+    </div>
+
+    <!-- Botones + acordeón -->
+    <div class="btns-section">
+      <div class="btn-grid">
+        <button type="button" class="grid-btn" id="btn-llegar" onclick="togglePanel('llegar')">
+          <span class="grid-btn-icon">📍</span>
+          <span class="grid-btn-label">Cómo llegar</span>
+        </button>
+        <button type="button" class="grid-btn" id="btn-confirmar" onclick="togglePanel('confirmar')">
+          <span class="grid-btn-icon">✓</span>
+          <span class="grid-btn-label">Confirmar asistencia</span>
+        </button>
+        <button type="button" class="grid-btn" id="btn-regalos" onclick="togglePanel('regalos')">
+          <span class="grid-btn-icon">🎁</span>
+          <span class="grid-btn-label">Lista de regalos</span>
+        </button>
+        <button type="button" class="grid-btn grid-btn-gold" id="btn-app" onclick="togglePanel('app')">
+          <span class="grid-btn-icon">📲</span>
+          <span class="grid-btn-label">Bajate la app</span>
+        </button>
+      </div>
+
+      <!-- Panel: Cómo llegar -->
+      <div class="acc-panel" id="panelLlegar">
+        <div class="acc-panel-inner">
+          <div id="llegarList"></div>
+        </div>
+      </div>
+
+      <!-- Panel: Confirmar asistencia -->
+      <div class="acc-panel" id="panelConfirmar">
+        <div class="acc-panel-inner">
+          <div class="rsvp-card">
+            <div id="rsvpForm">
+              <label class="field-label">Nombre completo</label>
+              <input id="rsvpName" class="text-input field-gap" type="text" placeholder="Tu nombre y apellido">
+
+              <label class="field-label">¿Vas a poder acompañarnos?</label>
+              <div class="opt-row field-gap" style="margin-top:8px;">
+                <button type="button" class="opt-btn" id="btnAttendYes" onclick="setAttending(true)">✓ Sí, confirmo</button>
+                <button type="button" class="opt-btn" id="btnAttendNo" onclick="setAttending(false)">✗ No puedo ir</button>
+              </div>
+
+              <div id="attendingExtra" class="hidden">
+                <label class="field-label">¿Cuántos acompañantes traés?</label>
+                <div class="opt-row field-gap" id="plusOnesRow" style="margin-top:8px;">
+                  <button type="button" class="opt-btn" data-val="0" onclick="setPlusOnes(0)">Solo yo</button>
+                  <button type="button" class="opt-btn" data-val="1" onclick="setPlusOnes(1)">+1</button>
+                  <button type="button" class="opt-btn" data-val="2" onclick="setPlusOnes(2)">+2</button>
+                  <button type="button" class="opt-btn" data-val="3" onclick="setPlusOnes(3)">+3</button>
+                </div>
+
+                <label class="field-label">Menú</label>
+                <div class="menu-col field-gap" id="menuCol" style="margin-top:8px;">
+                  <div class="menu-opt" data-menu="Carne" onclick="setMenu('Carne')"><span>🥩 Carne</span><span class="check">&nbsp;</span></div>
+                  <div class="menu-opt" data-menu="Pollo" onclick="setMenu('Pollo')"><span>🍗 Pollo</span><span class="check">&nbsp;</span></div>
+                  <div class="menu-opt" data-menu="Vegetariano" onclick="setMenu('Vegetariano')"><span>🥗 Vegetariano</span><span class="check">&nbsp;</span></div>
+                </div>
+
+                <label class="field-label">Restricciones alimentarias (opcional)</label>
+                <input id="rsvpRestrictions" class="text-input field-gap" type="text" placeholder="Alergias, celíaco...">
+              </div>
+
+              <button class="btn btn-primary" id="btnRsvpSubmit" onclick="handleRsvpSubmit()">Confirmar</button>
+            </div>
+
+            <div id="rsvpSuccess" class="success-box hidden">
+              <div class="success-icon" id="rsvpSuccessIcon">🥂</div>
+              <div class="success-title" id="rsvpSuccessTitle">¡Te esperamos!</div>
+              <div class="success-sub" id="rsvpSuccessSub"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Lista de regalos -->
+      <div class="acc-panel" id="panelRegalos">
+        <div class="acc-panel-inner">
+          <div id="giftsList"></div>
+          <div class="mp-card">
+            <div class="mp-title">💸 Transferencia libre</div>
+            <div class="mp-alias" id="mpAlias">—</div>
+            <div class="mp-sub">Alias Mercado Pago</div>
+            <button class="btn btn-outline btn-block" onclick="copyAlias()">Copiar alias</button>
+            <div class="copy-toast" id="copyToast"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Bajate la app -->
+      <div class="acc-panel" id="panelApp">
+        <div class="acc-panel-inner">
+          <div class="app-badge">GRATIS · SIN PUBLICIDAD</div>
+          <div class="app-title">Viví la boda al máximo con la app</div>
+          <div class="app-subtitle">Descargá BodaLive y sumate a los juegos en vivo, el sorteo y el mural de fotos del casamiento, todo desde tu celular.</div>
+          <div class="app-features">
+            <div class="app-feature">
+              <span class="app-feature-icon">🎯</span>
+              <span class="app-feature-label">Trivia en vivo</span>
+            </div>
+            <div class="app-feature">
+              <span class="app-feature-icon">🎉</span>
+              <span class="app-feature-label">Sorteo</span>
+            </div>
+            <div class="app-feature">
+              <span class="app-feature-icon">📸</span>
+              <span class="app-feature-label">Mural de fotos</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-download btn-block">Descargar BodaLive gratis</button>
+          <div class="app-code-card">
+            <div class="app-code-label">Tu código de acceso</div>
+            <div class="app-code-value" id="appCode">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Próximos eventos -->
+    <div class="section">
+      <div class="section-title">Próximos eventos</div>
+      <div id="proximosList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal aportar / donar -->
+<div id="contribModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Aportar</div>
+      <button class="modal-close" onclick="closeContribModal()">Cancelar</button>
+    </div>
+    <label class="field-label">Tu nombre</label>
+    <input id="modalGuestName" class="text-input field-gap" type="text" placeholder="Tu nombre y apellido">
+    <label class="field-label">Monto a aportar ($)</label>
+    <input id="modalAmount" class="text-input field-gap" type="number" inputmode="numeric" placeholder="Ej: 20000">
+    <div class="modal-note">
+      Acordate de hacer la transferencia al alias:<br>
+      <b id="modalAliasNote">—</b>
+    </div>
+    <p style="font-size: 11px; color: #7A9088; text-align: center; margin-bottom: 12px; line-height: 1.5;">
+      Si pagás con tarjeta de crédito, Mercado Pago descuenta una comisión del monto recibido por los novios.
+    </p>
+    <button class="btn btn-primary btn-block" id="btnModalConfirm" onclick="submitContribution()">Confirmar aporte</button>
+  </div>
+</div>
+
+<script>
+  // ---------------- Supabase setup ----------------
+  const SUPABASE_URL = 'https://htqwrnhrvvucahhlvfsc.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0cXdybmhydnZ1Y2FoaGx2ZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTA3NzQsImV4cCI6MjEwNDEyNjc3NH0.VfEPAZx9ynVozFPUu6HAV3k2db4fy7Ye6EvDMKSG3E4'
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  // ---------------- App state ----------------
+  const state = {
+    wedding: null,
+    weddingId: null,
+    phone: '',
+    events: [],
+    giftItems: [],
+    contributions: [],
+    countdownTimer: null,
+    rsvp: {
+      attending: null,
+      plusOnes: 0,
+      menu: '',
+    },
+    activeGiftItem: null,
+  }
+
+  const EVENT_ICONS = { civil: '✍️', ceremony: '💒', party: '🥂' }
+
+  const PANEL_IDS = {
+    llegar: 'panelLlegar',
+    confirmar: 'panelConfirmar',
+    regalos: 'panelRegalos',
+    app: 'panelApp',
+  }
+  let activePanel = null
+
+  function formatARS(n) {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency', currency: 'ARS', maximumFractionDigits: 0
+    }).format(n || 0)
+  }
+
+  function capitalize(str) {
+    if (!str) return str
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div')
+    div.textContent = str
+    return div.innerHTML
+  }
+
+  // ---------------- Pantalla 1: Ingreso ----------------
+  async function handleJoin() {
+    const codeInput = document.getElementById('inputCode')
+    const phoneInput = document.getElementById('inputPhone')
+    const errorBox = document.getElementById('joinError')
+    const btn = document.getElementById('btnJoin')
+
+    errorBox.classList.add('hidden')
+    const code = (codeInput.value || '').trim().toUpperCase()
+    const phoneDigits = (phoneInput.value || '').trim()
+
+    if (!code) {
+      errorBox.textContent = 'Ingresá el código de la boda'
+      errorBox.classList.remove('hidden')
+      return
+    }
+    if (!phoneDigits) {
+      errorBox.textContent = 'Ingresá tu número de celular'
+      errorBox.classList.remove('hidden')
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Verificando...'
+
+    try {
+      const { data, error } = await sb
+        .from('weddings')
+        .select('*')
+        .eq('invite_code', code)
+        .single()
+
+      if (error || !data) {
+        errorBox.textContent = 'Código incorrecto. Revisá el código con los novios.'
+        errorBox.classList.remove('hidden')
+        return
+      }
+
+      state.wedding = data
+      state.weddingId = data.id
+      state.phone = '+54' + phoneDigits.replace(/\D/g, '')
+
+      await enterWedding()
+    } catch (e) {
+      errorBox.textContent = 'Ocurrió un error. Probá de nuevo.'
+      errorBox.classList.remove('hidden')
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Ingresar a la boda'
+    }
+  }
+
+  // ---------------- Transición a Pantalla 2 ----------------
+  async function enterWedding() {
+    const s1 = document.getElementById('screen1')
+    const s2 = document.getElementById('screen2')
+
+    document.getElementById('heroNames').textContent =
+      `${state.wedding.bride_name || ''} & ${state.wedding.groom_name || ''}`
+    document.getElementById('mpAlias').textContent = state.wedding.mp_alias || 'Consultar con los novios'
+    document.getElementById('modalAliasNote').textContent = state.wedding.mp_alias || 'Consultar con los novios'
+    document.getElementById('appCode').textContent = state.wedding.invite_code || ''
+
+    if (state.wedding.date) {
+      const d = new Date(state.wedding.date + 'T00:00:00-03:00')
+      const formatted = d.toLocaleDateString('es-AR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      })
+      document.getElementById('heroDate').textContent = capitalize(formatted)
+      startCountdown(state.wedding.date)
+    }
+
+    s1.classList.add('hidden')
+    s2.classList.remove('hidden')
+    window.scrollTo(0, 0)
+
+    await Promise.all([
+      loadEvents(),
+      loadGifts(),
+    ])
+  }
+
+  // ---------------- Countdown ----------------
+  function startCountdown(dateStr) {
+    if (state.countdownTimer) clearInterval(state.countdownTimer)
+
+    function tick() {
+      const target = new Date(dateStr + 'T20:00:00-03:00').getTime()
+      const diff = target - Date.now()
+      const days = Math.max(0, Math.floor(diff / 86400000))
+      const hours = Math.max(0, Math.floor((diff % 86400000) / 3600000))
+      const minutes = Math.max(0, Math.floor((diff % 3600000) / 60000))
+      const seconds = Math.max(0, Math.floor((diff % 60000) / 1000))
+
+      document.getElementById('cdDays').textContent = days
+      document.getElementById('cdHours').textContent = String(hours).padStart(2, '0')
+      document.getElementById('cdMinutes').textContent = String(minutes).padStart(2, '0')
+      document.getElementById('cdSeconds').textContent = String(seconds).padStart(2, '0')
+    }
+
+    tick()
+    state.countdownTimer = setInterval(tick, 1000)
+  }
+
+  // ---------------- Acordeón ----------------
+  function refreshPanelHeight(key) {
+    if (activePanel !== key) return
+    const panelEl = document.getElementById(PANEL_IDS[key])
+    panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+  }
+
+  function setPanelOpen(key, isOpen) {
+    const panelEl = document.getElementById(PANEL_IDS[key])
+    const btnEl = document.getElementById('btn-' + key)
+    if (isOpen) {
+      panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+      btnEl.classList.add('panel-open')
+    } else {
+      panelEl.style.maxHeight = '0px'
+      btnEl.classList.remove('panel-open')
+    }
+  }
+
+  function togglePanel(key) {
+    if (activePanel === key) {
+      setPanelOpen(key, false)
+      activePanel = null
+      return
+    }
+    if (activePanel) setPanelOpen(activePanel, false)
+    setPanelOpen(key, true)
+    activePanel = key
+  }
+
+  // ---------------- Eventos: helpers de fecha/hora ----------------
+  function parseEventDatetime(dateStr, timeStr) {
+    const match = (timeStr || '').match(/(\d{1,2})[:.](\d{2})/)
+    const hh = match ? match[1].padStart(2, '0') : '00'
+    const mm = match ? match[2] : '00'
+    return new Date(`${dateStr}T${hh}:${mm}:00-03:00`)
+  }
+
+  function computeNextEventId() {
+    if (!state.wedding || !state.wedding.date) return null
+    const now = Date.now()
+    const sorted = [...state.events].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
+    for (const ev of sorted) {
+      const dt = parseEventDatetime(state.wedding.date, ev.time)
+      if (dt.getTime() >= now) return ev.id
+    }
+    return null
+  }
+
+  // ---------------- Eventos: carga y render ----------------
+  async function loadEvents() {
+    const { data } = await sb
+      .from('wedding_events')
+      .select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('order_num')
+
+    state.events = data || []
+    renderComoLlegar()
+    renderProximosEventos()
+  }
+
+  function renderComoLlegar() {
+    const container = document.getElementById('llegarList')
+    if (!state.events.length) {
+      container.innerHTML = '<div class="empty-note">Sin eventos cargados aún</div>'
+      refreshPanelHeight('llegar')
+      return
+    }
+
+    const fullDate = state.wedding && state.wedding.date
+      ? capitalize(new Date(state.wedding.date + 'T00:00:00-03:00').toLocaleDateString('es-AR', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        }))
+      : ''
+
+    const sorted = [...state.events].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
+    container.innerHTML = sorted.map(ev => {
+      const address = ev.address || ''
+      const mapQuery = encodeURIComponent(address)
+      const mapEmbed = `https://maps.google.com/maps?q=${mapQuery}&output=embed`
+      const mapUrl = `https://maps.google.com/?q=${mapQuery}`
+      const mapHtml = address
+        ? `<iframe class="llegar-map" src="${mapEmbed}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+        : ''
+
+      return `
+        <div class="llegar-card">
+          <div class="llegar-name">${escapeHtml(ev.name || '')}</div>
+          <div class="llegar-time">${escapeHtml(ev.time || '')}</div>
+          <div class="llegar-date">${fullDate}</div>
+          <div class="llegar-addr">${escapeHtml(address)}</div>
+          ${mapHtml}
+          <a class="btn btn-outline btn-block" href="${mapUrl}" target="_blank" rel="noopener">Abrir en Maps</a>
+        </div>
+      `
+    }).join('')
+
+    refreshPanelHeight('llegar')
+  }
+
+  function renderProximosEventos() {
+    const list = document.getElementById('proximosList')
+    if (!state.events.length) {
+      list.innerHTML = '<div class="empty-note">Sin eventos cargados aún</div>'
+      return
+    }
+
+    const nextId = computeNextEventId()
+    const dateLabel = state.wedding && state.wedding.date
+      ? capitalize(new Date(state.wedding.date + 'T00:00:00-03:00').toLocaleDateString('es-AR', {
+          weekday: 'long', day: 'numeric', month: 'long'
+        }))
+      : ''
+
+    const sorted = [...state.events].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
+    list.innerHTML = sorted.map(ev => {
+      const isNext = ev.id === nextId
+      const when = ev.time ? `${dateLabel} · ${escapeHtml(ev.time)}` : dateLabel
+
+      return `
+        <div class="proximo-row">
+          <div class="proximo-dot ${isNext ? 'dot-gold' : 'dot-gray'}"></div>
+          <div class="proximo-info">
+            <div class="proximo-name">${escapeHtml(ev.name || '')}</div>
+            <div class="proximo-when">${when}</div>
+            <div class="proximo-addr">${escapeHtml(ev.address || '')}</div>
+          </div>
+        </div>
+      `
+    }).join('')
+  }
+
+  // ---------------- RSVP ----------------
+  function setAttending(val) {
+    state.rsvp.attending = val
+    document.getElementById('btnAttendYes').classList.toggle('active-yes', val === true)
+    document.getElementById('btnAttendNo').classList.toggle('active-no', val === false)
+    document.getElementById('attendingExtra').classList.toggle('hidden', val !== true)
+    refreshPanelHeight('confirmar')
+  }
+
+  function setPlusOnes(n) {
+    state.rsvp.plusOnes = n
+    document.querySelectorAll('#plusOnesRow .opt-btn').forEach(btn => {
+      btn.classList.toggle('active-num', Number(btn.dataset.val) === n)
+    })
+  }
+
+  function setMenu(menu) {
+    state.rsvp.menu = menu
+    document.querySelectorAll('#menuCol .menu-opt').forEach(el => {
+      const isActive = el.dataset.menu === menu
+      el.classList.toggle('active-menu', isActive)
+      el.querySelector('.check').textContent = isActive ? '✓' : ''
+    })
+  }
+
+  async function handleRsvpSubmit() {
+    const nameInput = document.getElementById('rsvpName')
+    const restrictionsInput = document.getElementById('rsvpRestrictions')
+    const btn = document.getElementById('btnRsvpSubmit')
+    const name = (nameInput.value || '').trim()
+
+    if (!name) {
+      alert('Ingresá tu nombre')
+      return
+    }
+    if (state.rsvp.attending === null) {
+      alert('Confirmá si vas a poder ir')
+      return
+    }
+    if (state.rsvp.attending && !state.rsvp.menu) {
+      alert('Elegí tu opción de menú')
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Guardando...'
+
+    const payload = {
+      wedding_id: state.weddingId,
+      name: name,
+      rsvp_status: state.rsvp.attending ? 'confirmed' : 'declined',
+      menu_choice: state.rsvp.attending ? state.rsvp.menu : null,
+      plus_ones: state.rsvp.attending ? state.rsvp.plusOnes : 0,
+      restrictions: (restrictionsInput.value || '').trim() || null,
+      phone: state.phone,
+    }
+
+    const { error } = await sb
+      .from('guests')
+      .upsert(payload, { onConflict: 'name,wedding_id' })
+
+    btn.disabled = false
+    btn.textContent = 'Confirmar'
+
+    if (error) {
+      alert('Error: ' + error.message)
+      return
+    }
+
+    document.getElementById('rsvpForm').classList.add('hidden')
+    const successBox = document.getElementById('rsvpSuccess')
+    successBox.classList.remove('hidden')
+    document.getElementById('rsvpSuccessIcon').textContent = state.rsvp.attending ? '🥂' : '💚'
+    document.getElementById('rsvpSuccessTitle').textContent = state.rsvp.attending
+      ? '¡Te esperamos!' : '¡Gracias por avisarnos!'
+    document.getElementById('rsvpSuccessSub').textContent = state.rsvp.attending
+      ? `${name}, tu confirmación fue registrada.`
+      : `${name}, los queremos igual.`
+
+    refreshPanelHeight('confirmar')
+  }
+
+  // ---------------- Regalos ----------------
+  async function loadGifts() {
+    const [itemsRes, contribRes] = await Promise.all([
+      sb.from('gift_items').select('*').eq('wedding_id', state.weddingId).order('order_num'),
+      sb.from('gift_contributions').select('*'),
+    ])
+    state.giftItems = itemsRes.data || []
+    state.contributions = contribRes.data || []
+    renderGifts()
+  }
+
+  function getRaised(itemId) {
+    return state.contributions
+      .filter(c => c.gift_item_id === itemId)
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0)
+  }
+
+  function renderGifts() {
+    const list = document.getElementById('giftsList')
+    if (!state.giftItems.length) {
+      list.innerHTML = '<div class="empty-note">Sin regalos cargados aún</div>'
+      refreshPanelHeight('regalos')
+      return
+    }
+
+    list.innerHTML = state.giftItems.map(item => {
+      const isFree = Number(item.price) === 0
+      const isReserved = item.status === 'reserved'
+      const raised = getRaised(item.id)
+      const pct = isFree ? 0 : Math.min(100, Math.round((raised / item.price) * 100))
+      const missing = Math.max(0, item.price - raised)
+
+      let actionHtml = ''
+      if (isReserved) {
+        actionHtml = `<div class="badge-reserved">Reservado</div>`
+      } else {
+        actionHtml = `<button class="btn btn-gold btn-block" onclick="openContribModal('${item.id}')">Aportar con Mercado Pago</button>`
+      }
+
+      const progressHtml = (!isFree && !isReserved) ? `
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="progress-label">${pct}% completado${pct < 100 ? ' · falta ' + formatARS(missing) : ' · ¡Completado!'}</div>
+      ` : ''
+
+      return `
+        <div class="gift-card" id="giftCard-${item.id}">
+          <div class="gift-top">
+            <div class="gift-emoji">${item.emoji || '🎁'}</div>
+            <div>
+              <div class="gift-name">${escapeHtml(item.name || '')}</div>
+              <div class="gift-price">${isFree ? 'Monto libre' : formatARS(item.price)}</div>
+            </div>
+          </div>
+          ${progressHtml}
+          ${actionHtml}
+        </div>
+      `
+    }).join('')
+
+    refreshPanelHeight('regalos')
+  }
+
+  function openContribModal(itemId) {
+    const item = state.giftItems.find(i => i.id === itemId)
+    if (!item) return
+    state.activeGiftItem = item
+
+    document.getElementById('modalTitle').textContent =
+      Number(item.price) === 0 ? 'Donar al fondo' : `Aportar para ${item.name}`
+    document.getElementById('modalGuestName').value = ''
+    document.getElementById('modalAmount').value = ''
+    document.getElementById('modalAliasNote').textContent = state.wedding.mp_alias || 'Consultar con los novios'
+    document.getElementById('contribModal').classList.remove('hidden')
+  }
+
+  function closeContribModal() {
+    document.getElementById('contribModal').classList.add('hidden')
+    state.activeGiftItem = null
+  }
+
+  async function submitContribution() {
+    const item = state.activeGiftItem
+    if (!item) return
+
+    const nameInput = document.getElementById('modalGuestName')
+    const amountInput = document.getElementById('modalAmount')
+    const btn = document.getElementById('btnModalConfirm')
+
+    const guestName = (nameInput.value || '').trim()
+    const amount = parseFloat(amountInput.value)
+
+    if (!guestName) {
+      alert('Ingresá tu nombre')
+      return
+    }
+    if (!amount || amount <= 0) {
+      alert('Ingresá un monto válido')
+      return
+    }
+    if (Number(item.price) > 0 && amount > item.price) {
+      alert('El monto no puede superar el precio del regalo')
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = 'Registrando...'
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+    // En desktop se abre una pestaña en blanco ya mismo (todavía dentro del
+    // gesto de click del usuario) para que el navegador no bloquee el popup;
+    // recién más abajo, cuando tengamos el init_point, la redirigimos ahí.
+    // En mobile no abrimos pestaña nueva: redirigimos la misma pestaña más
+    // abajo, porque window.open después de los await queda bloqueado.
+    const paymentWindow = isMobile ? null : window.open('', '_blank')
+
+    const { error } = await sb.from('gift_contributions').insert({
+      gift_item_id: item.id,
+      guest_name: guestName,
+      amount: amount,
+    })
+
+    if (error) {
+      btn.disabled = false
+      btn.textContent = 'Confirmar aporte'
+      if (paymentWindow) paymentWindow.close()
+      alert('Error: ' + error.message)
+      return
+    }
+
+    state.contributions.push({ gift_item_id: item.id, guest_name: guestName, amount: amount })
+
+    btn.textContent = 'Generando link de pago...'
+
+    try {
+      const paymentRes = await fetch(
+        'https://htqwrnhrvvucahhlvfsc.supabase.co/functions/v1/create-payment',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0cXdybmhydnZ1Y2FoaGx2ZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTA3NzQsImV4cCI6MjEwNDEyNjc3NH0.VfEPAZx9ynVozFPUu6HAV3k2db4fy7Ye6EvDMKSG3E4',
+          },
+          body: JSON.stringify({
+            amount: amount,
+            description: item.name,
+            gift_item_id: item.id,
+            guest_name: guestName,
+            wedding_id: state.weddingId,
+          }),
+        }
+      )
+
+      const paymentData = await paymentRes.json()
+
+      if (!paymentRes.ok || !paymentData.init_point) {
+        throw new Error(paymentData.error || 'No se pudo generar el link de pago')
+      }
+
+      if (isMobile) {
+        // En mobile redirigimos la misma pestaña: Mercado Pago abre ahí y,
+        // al terminar el pago, vuelve a esta página.
+        window.location.href = paymentData.init_point
+      } else {
+        if (paymentWindow) {
+          paymentWindow.location.href = paymentData.init_point
+        } else {
+          window.open(paymentData.init_point, '_blank')
+        }
+      }
+    } catch (paymentError) {
+      // Si la Edge Function falla, el aporte ya quedó guardado igual:
+      // mostramos el alias de MP como método alternativo de pago.
+      if (paymentWindow) paymentWindow.close()
+      alert(`¡Gracias ${guestName}! No pudimos generar el link de pago automático, pero tu aporte ya quedó registrado. Podés transferir al alias de Mercado Pago: ${state.wedding.mp_alias || 'consultar con los novios'}`)
+    }
+
+    btn.disabled = false
+    btn.textContent = 'Confirmar aporte'
+    renderGifts()
+    closeContribModal()
+  }
+
+  // ---------------- Copiar alias ----------------
+  function copyAlias() {
+    const alias = state.wedding && state.wedding.mp_alias ? state.wedding.mp_alias : ''
+    const toast = document.getElementById('copyToast')
+    if (!alias) {
+      toast.textContent = 'No hay alias cargado'
+      setTimeout(() => toast.textContent = '', 2000)
+      return
+    }
+
+    function showCopied() {
+      toast.textContent = '¡Alias copiado!'
+      setTimeout(() => toast.textContent = '', 2000)
+      refreshPanelHeight('regalos')
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(alias).then(showCopied).catch(() => fallbackCopy(alias, showCopied))
+    } else {
+      fallbackCopy(alias, showCopied)
+    }
+  }
+
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (e) {}
+    document.body.removeChild(ta)
+    if (cb) cb()
+  }
+
+  // Permitir Enter para ingresar el código
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('inputCode').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleJoin()
+    })
+    document.getElementById('inputPhone').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleJoin()
+    })
+  })
+</script>
+
+</body>
+</html>
