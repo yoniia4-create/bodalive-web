@@ -408,35 +408,6 @@
   .mp-sub { font-size: 12px; color: var(--text-soft); margin-bottom: 14px; }
   .copy-toast { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 10px; height: 14px; }
 
-  /* Bajate la app */
-  .app-badge {
-    display: inline-block;
-    background: var(--rose);
-    color: var(--primary);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 6px 12px;
-    border-radius: 99px;
-    margin-bottom: 14px;
-  }
-  .app-title {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-size: 24px;
-    color: var(--primary);
-    line-height: 1.3;
-    margin-bottom: 10px;
-  }
-  .app-subtitle { font-size: 13.5px; color: var(--text-soft); line-height: 1.55; margin-bottom: 18px; }
-  .app-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-  .app-feature { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px 6px; text-align: center; }
-  .app-feature-icon { display: block; font-size: 20px; margin-bottom: 6px; }
-  .app-feature-label { font-size: 11px; font-weight: 600; color: var(--text); }
-  .btn-download { background: var(--primary); color: #fff; font-size: 15.5px; padding: 17px; border-radius: 14px; margin-bottom: 16px; }
-  .app-code-card { background: #fff; border: 1.5px solid var(--gold); border-radius: 14px; padding: 18px; text-align: center; }
-  .app-code-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-soft); margin-bottom: 6px; }
-  .app-code-value { font-family: 'Playfair Display', serif; font-style: italic; font-size: 28px; color: var(--gold); letter-spacing: 2px; }
 
   /* Próximos eventos */
   .section { padding: 32px 20px 30px; }
@@ -478,6 +449,106 @@
   .modal-close { font-size: 13px; color: var(--gold); cursor: pointer; background: none; border: none; font-weight: 600; }
   .modal-note { font-size: 13px; color: var(--text-soft); line-height: 1.5; margin: 16px 0 20px; }
   .modal-note b { color: var(--gold); }
+
+  /* ---------- Juegos y actividades ---------- */
+  .guest-name-bar { padding: 4px 4px 18px; }
+
+  .game-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .game-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+  }
+  .game-header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .game-icon { font-size: 22px; flex: none; }
+  .game-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .game-desc { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .game-status { font-size: 11px; font-weight: 600; white-space: nowrap; flex: none; }
+  .game-status.status-active { color: #2D8659; }
+  .game-status.status-waiting { color: var(--text-soft); }
+
+  .game-sub-panel { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .game-sub-panel-inner { padding: 0 16px 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+
+  /* Mural de fotos */
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--rose); }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-name-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.45); color: #fff;
+    font-size: 11px; font-weight: 500; padding: 5px 6px;
+  }
+  .photo-like-badge {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.45); color: #fff;
+    font-size: 11px; font-weight: 600; border: none;
+    border-radius: 20px; padding: 4px 8px; cursor: pointer;
+  }
+  .photo-like-badge:disabled { cursor: default; }
+
+  /* Trivia */
+  .trivia-opt {
+    display: block; width: 100%; text-align: left;
+    padding: 14px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: #fff; font-size: 14px; color: var(--text);
+    margin-bottom: 8px; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .trivia-opt:disabled { cursor: default; }
+  .trivia-opt.correct { background: #E1F5EE; border-color: var(--primary); color: var(--primary); }
+  .trivia-opt.wrong { background: #F0E6E0; border-color: var(--danger); color: var(--danger); }
+  .trivia-feedback { text-align: center; font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+  /* Sorteo y votaciones */
+  .raffle-box { background: var(--primary); border-radius: 14px; padding: 18px; margin-bottom: 14px; text-align: center; }
+  .raffle-title-label { font-size: 11px; letter-spacing: 1px; color: rgba(201,169,110,0.85); margin-bottom: 6px; text-transform: uppercase; }
+  .raffle-title-text { font-size: 18px; color: #fff; margin-bottom: 14px; font-weight: 500; }
+  .raffle-winner { font-size: 22px; color: var(--gold); font-weight: 700; }
+  .poll-opt { border-radius: 10px; padding: 12px 14px; border: 1.5px solid var(--border); margin-bottom: 8px; background: #fff; }
+  .poll-opt-row { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 4px; }
+  .poll-track { height: 5px; border-radius: 99px; background: var(--rose); overflow: hidden; }
+  .poll-fill { height: 100%; background: var(--gold); border-radius: 99px; transition: width 0.4s ease; }
+
+  /* Botómetro */
+  .boto-tap-btn {
+    width: 100%; padding: 40px 0; border-radius: 20px;
+    background: #2D9D5F; color: #fff; font-size: 24px;
+    font-weight: 800; border: none; cursor: pointer;
+  }
+  .boto-tap-btn:active { transform: scale(0.98); }
+  .boto-countdown { text-align: center; font-size: 30px; font-weight: 700; color: var(--primary); margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+  .boto-clicks { text-align: center; font-size: 16px; font-weight: 600; color: var(--gold); margin-top: 14px; }
+  .boto-rank-row { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+
+  /* Emojis */
+  .emoji-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .emoji-btn {
+    font-size: 28px; padding: 16px 0; border-radius: 12px;
+    border: 1.5px solid var(--border); background: #fff;
+    cursor: pointer; position: relative;
+  }
+  .emoji-btn:disabled { opacity: 0.4; cursor: default; }
+  .emoji-cooldown-badge {
+    position: absolute; top: 6px; right: 6px;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    background: rgba(0,0,0,0.35); color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
 </style>
 </head>
 <body>
@@ -541,9 +612,9 @@
           <span class="grid-btn-icon">🎁</span>
           <span class="grid-btn-label">Lista de regalos</span>
         </button>
-        <button type="button" class="grid-btn grid-btn-gold" id="btn-app" onclick="togglePanel('app')">
-          <span class="grid-btn-icon">📲</span>
-          <span class="grid-btn-label">Bajate la app</span>
+        <button type="button" class="grid-btn grid-btn-gold" id="btn-juegos" onclick="togglePanel('juegos')">
+          <span class="grid-btn-icon">🎮</span>
+          <span class="grid-btn-label">Juegos y actividades</span>
         </button>
       </div>
 
@@ -614,31 +685,114 @@
         </div>
       </div>
 
-      <!-- Panel: Bajate la app -->
-      <div class="acc-panel" id="panelApp">
+      <!-- Panel: Juegos y actividades -->
+      <div class="acc-panel" id="panelJuegos">
         <div class="acc-panel-inner">
-          <div class="app-badge">GRATIS · SIN PUBLICIDAD</div>
-          <div class="app-title">Viví la boda al máximo con la app</div>
-          <div class="app-subtitle">Descargá BodaLive y sumate a los juegos en vivo, el sorteo y el mural de fotos del casamiento, todo desde tu celular.</div>
-          <div class="app-features">
-            <div class="app-feature">
-              <span class="app-feature-icon">🎯</span>
-              <span class="app-feature-label">Trivia en vivo</span>
-            </div>
-            <div class="app-feature">
-              <span class="app-feature-icon">🎉</span>
-              <span class="app-feature-label">Sorteo</span>
-            </div>
-            <div class="app-feature">
-              <span class="app-feature-icon">📸</span>
-              <span class="app-feature-label">Mural de fotos</span>
+
+          <div class="guest-name-bar">
+            <label class="field-label" for="gamesGuestName">Tu nombre (para jugar)</label>
+            <input id="gamesGuestName" class="text-input" type="text"
+              placeholder="Tu nombre" oninput="onGamesGuestNameChange()">
+          </div>
+
+          <!-- Mural de fotos -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('fotos')">
+              <div class="game-header-left">
+                <span class="game-icon">📸</span>
+                <div>
+                  <div class="game-title">Mural de fotos</div>
+                  <div class="game-desc">Subí y mirá las fotos de la fiesta</div>
+                </div>
+              </div>
+              <span class="game-status status-active">🟢 Siempre disponible</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubFotos">
+              <div class="game-sub-panel-inner">
+                <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoSelected(event)">
+                <button type="button" class="btn btn-primary btn-block" id="btnPhotoUpload"
+                  style="margin-bottom:10px;" onclick="document.getElementById('photoInput').click()">
+                  + Subir foto
+                </button>
+                <div id="photoUploadStatus" style="font-size:12px;color:var(--text-soft);margin-bottom:10px;min-height:14px;"></div>
+                <div id="photosGrid" class="photo-grid"></div>
+              </div>
             </div>
           </div>
-          <button type="button" class="btn btn-download btn-block">Descargar BodaLive gratis</button>
-          <div class="app-code-card">
-            <div class="app-code-label">Tu código de acceso</div>
-            <div class="app-code-value" id="appCode">—</div>
+
+          <!-- Trivia -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('trivia')">
+              <div class="game-header-left">
+                <span class="game-icon">🎯</span>
+                <div>
+                  <div class="game-title">Trivia de la pareja</div>
+                  <div class="game-desc">Respondé preguntas sobre los novios</div>
+                </div>
+              </div>
+              <span class="game-status status-waiting" id="statusTrivia">⚪ En espera</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubTrivia">
+              <div class="game-sub-panel-inner" id="triviaContent"></div>
+            </div>
           </div>
+
+          <!-- Sorteo y votaciones -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('sorteo')">
+              <div class="game-header-left">
+                <span class="game-icon">🎟️</span>
+                <div>
+                  <div class="game-title">Sorteo y votaciones</div>
+                  <div class="game-desc">Participá y votá en vivo</div>
+                </div>
+              </div>
+              <span class="game-status status-waiting" id="statusSorteo">⚪ En espera</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubSorteo">
+              <div class="game-sub-panel-inner" id="sorteoContent"></div>
+            </div>
+          </div>
+
+          <!-- Botómetro -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('boto')">
+              <div class="game-header-left">
+                <span class="game-icon">🔥</span>
+                <div>
+                  <div class="game-title">Botómetro</div>
+                  <div class="game-desc">Competencia de clics entre mesas</div>
+                </div>
+              </div>
+              <span class="game-status status-waiting" id="statusBoto">⚪ En espera</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubBoto">
+              <div class="game-sub-panel-inner" id="botoContent"></div>
+            </div>
+          </div>
+
+          <!-- Emojis para la proyección -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('emojis')">
+              <div class="game-header-left">
+                <span class="game-icon">✨</span>
+                <div>
+                  <div class="game-title">Emojis a la pantalla</div>
+                  <div class="game-desc">Mandá un emoji a la proyección del salón</div>
+                </div>
+              </div>
+              <span class="game-status status-active">🟢 Siempre disponible</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubEmojis">
+              <div class="game-sub-panel-inner">
+                <div style="font-size:13px;color:var(--text-soft);margin-bottom:12px;">
+                  Enviá un emoji a la pantalla del salón
+                </div>
+                <div class="emoji-grid" id="emojiGrid"></div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -697,17 +851,41 @@
       menu: '',
     },
     activeGiftItem: null,
+    photos: [],
+    likedPhotoIds: new Set(),
+    trivia: { game: null, questions: [], answered: false, selectedIndex: null },
+    raffleGame: { raffle: null, poll: null, entries: [], votes: [], hasEntered: false, hasVoted: false },
+    boto: {
+      session: null, tableName: '', clicks: 0, secondsLeft: 60,
+      ranking: [], syncTimer: null, countdownTimer: null, syncedSessionId: null,
+    },
+    emojiCooldownLeft: 0,
+    emojiCooldownTimer: null,
   }
 
   const EVENT_ICONS = { civil: '✍️', ceremony: '💒', party: '🥂' }
+  const FLOATING_EMOJIS_WEB = ['🔥', '✨', '💃', '🎉', '❤️', '🥂']
+  const MEDALS_WEB = ['🥇', '🥈', '🥉']
+  const BOTO_ROUND_SECONDS = 60
+  const BOTO_SYNC_INTERVAL_MS = 2000
 
   const PANEL_IDS = {
     llegar: 'panelLlegar',
     confirmar: 'panelConfirmar',
     regalos: 'panelRegalos',
-    app: 'panelApp',
+    juegos: 'panelJuegos',
   }
   let activePanel = null
+
+  const GAME_PANEL_IDS = {
+    fotos: 'gameSubFotos',
+    trivia: 'gameSubTrivia',
+    sorteo: 'gameSubSorteo',
+    boto: 'gameSubBoto',
+    emojis: 'gameSubEmojis',
+  }
+  const STATUS_EL_IDS = { trivia: 'statusTrivia', sorteo: 'statusSorteo', boto: 'statusBoto' }
+  let activeGame = null
 
   function formatARS(n) {
     return new Intl.NumberFormat('es-AR', {
@@ -787,7 +965,7 @@
       `${state.wedding.bride_name || ''} & ${state.wedding.groom_name || ''}`
     document.getElementById('mpAlias').textContent = state.wedding.mp_alias || 'Consultar con los novios'
     document.getElementById('modalAliasNote').textContent = state.wedding.mp_alias || 'Consultar con los novios'
-    document.getElementById('appCode').textContent = state.wedding.invite_code || ''
+    document.getElementById('gamesGuestName').value = getSavedGuestName()
 
     if (state.wedding.date) {
       const d = new Date(state.wedding.date + 'T00:00:00-03:00')
@@ -805,7 +983,12 @@
     await Promise.all([
       loadEvents(),
       loadGifts(),
+      loadPhotosGame(),
+      loadTriviaGame(),
+      loadRaffleGame(),
+      loadBotoSession(),
     ])
+    renderEmojiButtons()
   }
 
   // ---------------- Countdown ----------------
@@ -858,6 +1041,58 @@
     if (activePanel) setPanelOpen(activePanel, false)
     setPanelOpen(key, true)
     activePanel = key
+  }
+
+  // ---------------- Sub-acordeón: Juegos y actividades ----------------
+  function setGameOpen(key, isOpen) {
+    const panelEl = document.getElementById(GAME_PANEL_IDS[key])
+    panelEl.style.maxHeight = isOpen ? panelEl.scrollHeight + 'px' : '0px'
+  }
+
+  function refreshGameHeight(key) {
+    if (activeGame !== key) return
+    setGameOpen(key, true)
+    refreshPanelHeight('juegos')
+  }
+
+  function toggleGame(key) {
+    if (activeGame === key) {
+      setGameOpen(key, false)
+      activeGame = null
+    } else {
+      if (activeGame) setGameOpen(activeGame, false)
+      setGameOpen(key, true)
+      activeGame = key
+    }
+    refreshPanelHeight('juegos')
+  }
+
+  function setGameStatus(key, isActive, label) {
+    const el = document.getElementById(STATUS_EL_IDS[key])
+    if (!el) return
+    el.textContent = (isActive ? '🟢 ' : '⚪ ') + label
+    el.classList.toggle('status-active', isActive)
+    el.classList.toggle('status-waiting', !isActive)
+  }
+
+  // ---------------- Nombre compartido para jugar ----------------
+  function getSavedGuestName() {
+    return localStorage.getItem('bl_guest_name') || ''
+  }
+
+  function onGamesGuestNameChange() {
+    const val = document.getElementById('gamesGuestName').value.trim()
+    localStorage.setItem('bl_guest_name', val)
+  }
+
+  function requireGuestName() {
+    const val = document.getElementById('gamesGuestName').value.trim()
+    if (!val) {
+      alert('Ingresá tu nombre arriba para participar')
+      return null
+    }
+    localStorage.setItem('bl_guest_name', val)
+    return val
   }
 
   // ---------------- Eventos: helpers de fecha/hora ----------------
@@ -1032,6 +1267,9 @@
       return
     }
 
+    localStorage.setItem('bl_guest_name', name)
+    document.getElementById('gamesGuestName').value = name
+
     document.getElementById('rsvpForm').classList.add('hidden')
     const successBox = document.getElementById('rsvpSuccess')
     successBox.classList.remove('hidden')
@@ -1043,6 +1281,630 @@
       : `${name}, los queremos igual.`
 
     refreshPanelHeight('confirmar')
+  }
+
+  // ---------------- Actividad 1: Mural de fotos ----------------
+  async function loadPhotosGame() {
+    const { data } = await sb.from('photos').select('*')
+      .eq('wedding_id', state.weddingId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+    state.photos = data || []
+
+    await sb.removeChannel(sb.channel('web-photos-realtime'))
+    sb.channel('web-photos-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'photos',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const p = payload.new
+        if (p.status !== 'approved') return
+        if (state.photos.some(existing => existing.id === p.id)) return
+        state.photos = [p, ...state.photos]
+        renderPhotosGrid()
+      })
+      .subscribe()
+
+    await loadMyPhotoLikes()
+    renderPhotosGrid()
+  }
+
+  async function loadMyPhotoLikes() {
+    const name = getSavedGuestName()
+    if (!name) return
+    const { data } = await sb.from('photo_likes').select('photo_id').eq('guest_name', name)
+    state.likedPhotoIds = new Set((data || []).map(l => l.photo_id))
+  }
+
+  function renderPhotosGrid() {
+    const grid = document.getElementById('photosGrid')
+    if (!state.photos.length) {
+      grid.innerHTML = '<div class="empty-note">Todavía no hay fotos. ¡Subí la primera!</div>'
+    } else {
+      grid.innerHTML = state.photos.map(p => {
+        const liked = state.likedPhotoIds.has(p.id)
+        return `
+          <div class="photo-item">
+            <img src="${p.url}" loading="lazy">
+            <button type="button" class="photo-like-badge" onclick="handlePhotoLike('${p.id}')" ${liked ? 'disabled' : ''}>
+              ${liked ? '❤️' : '🤍'} ${p.likes || 0}
+            </button>
+            <div class="photo-name-overlay">${escapeHtml(p.guest_name || '')}</div>
+          </div>
+        `
+      }).join('')
+    }
+    refreshGameHeight('fotos')
+  }
+
+  async function handlePhotoLike(photoId) {
+    const name = requireGuestName()
+    if (!name || state.likedPhotoIds.has(photoId)) return
+    const photo = state.photos.find(p => p.id === photoId)
+    if (!photo) return
+
+    state.likedPhotoIds.add(photoId)
+    photo.likes = (photo.likes || 0) + 1
+    renderPhotosGrid()
+
+    const { error } = await sb.from('photo_likes').insert({ photo_id: photoId, guest_name: name })
+    if (error) return
+    await sb.from('photos').update({ likes: photo.likes }).eq('id', photoId)
+  }
+
+  function handlePhotoSelected(e) {
+    const file = e.target.files[0]
+    e.target.value = ''
+    if (file) uploadPhoto(file)
+  }
+
+  async function uploadPhoto(file) {
+    const name = requireGuestName()
+    if (!name) return
+
+    const myCount = state.photos.filter(p => p.guest_name === name).length
+    if (myCount >= 3) {
+      alert('Podés subir hasta 3 fotos por invitado.')
+      return
+    }
+
+    const statusEl = document.getElementById('photoUploadStatus')
+    const btn = document.getElementById('btnPhotoUpload')
+    btn.disabled = true
+    statusEl.textContent = 'Comprimiendo imagen...'
+
+    try {
+      const blob = await compressImage(file, 1080, 0.6)
+      statusEl.textContent = 'Subiendo...'
+
+      const fileName = `${state.weddingId}/${Date.now()}.jpg`
+      const { error: uploadError } = await sb.storage
+        .from('wedding-photos')
+        .upload(fileName, blob, { contentType: 'image/jpeg' })
+      if (uploadError) throw new Error(uploadError.message)
+
+      const { data: urlData } = sb.storage.from('wedding-photos').getPublicUrl(fileName)
+
+      const { data: inserted, error: insertError } = await sb.from('photos').insert({
+        wedding_id: state.weddingId,
+        guest_name: name,
+        storage_path: fileName,
+        url: urlData.publicUrl,
+        status: 'approved',
+        likes: 0,
+      }).select().single()
+      if (insertError) throw new Error(insertError.message)
+
+      if (inserted && !state.photos.some(p => p.id === inserted.id)) {
+        state.photos = [inserted, ...state.photos]
+      }
+      renderPhotosGrid()
+      statusEl.textContent = '¡Foto subida! 📸'
+    } catch (err) {
+      statusEl.textContent = 'Error: ' + err.message
+    } finally {
+      btn.disabled = false
+      setTimeout(() => { statusEl.textContent = '' }, 3000)
+    }
+  }
+
+  function compressImage(file, maxSize, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      const img = new Image()
+      reader.onerror = reject
+      img.onerror = reject
+      reader.onload = () => { img.src = reader.result }
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+        if (width > height && width > maxSize) {
+          height = Math.round(height * (maxSize / width))
+          width = maxSize
+        } else if (height >= width && height > maxSize) {
+          width = Math.round(width * (maxSize / height))
+          height = maxSize
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob)
+          else reject(new Error('No se pudo procesar la imagen'))
+        }, 'image/jpeg', quality)
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // ---------------- Actividad 2: Trivia ----------------
+  async function loadTriviaGame() {
+    const t = state.trivia
+    const { data: g } = await sb.from('trivia_games')
+      .select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    t.game = g || null
+
+    if (g) {
+      const { data: q } = await sb.from('trivia_questions')
+        .select('*')
+        .eq('game_id', g.id)
+        .order('order_num')
+      t.questions = q || []
+
+      await sb.removeChannel(sb.channel('web-trivia-guest'))
+      sb.channel('web-trivia-guest')
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'trivia_games',
+          filter: `id=eq.${g.id}`
+        }, (payload) => {
+          t.game = payload.new
+          t.answered = false
+          t.selectedIndex = null
+          setGameStatus('trivia', t.game.status === 'active', triviaStatusLabel(t.game.status))
+          renderTrivia()
+        })
+        .subscribe()
+    }
+
+    setGameStatus('trivia', g && g.status === 'active', triviaStatusLabel(g ? g.status : null))
+    renderTrivia()
+  }
+
+  function triviaStatusLabel(status) {
+    if (status === 'active') return 'Activo'
+    if (status === 'finished') return 'Terminado'
+    return 'En espera'
+  }
+
+  function renderTrivia() {
+    const container = document.getElementById('triviaContent')
+    const t = state.trivia
+    const g = t.game
+
+    if (!g) {
+      container.innerHTML = '<div class="empty-note">Todavía no hay trivia cargada.</div>'
+      refreshGameHeight('trivia')
+      return
+    }
+
+    if (g.status === 'waiting') {
+      container.innerHTML = '<div class="empty-note">🎯 El juego va a empezar pronto. Esperá que los novios lo inicien.</div>'
+    } else if (g.status === 'finished') {
+      container.innerHTML = '<div class="empty-note">🏆 ¡Terminó la trivia! Revisá el podio en la pantalla del salón.</div>'
+    } else if (g.status === 'active') {
+      const q = t.questions[g.current_question]
+      if (!q) {
+        container.innerHTML = '<div class="empty-note">Esperando la próxima pregunta...</div>'
+      } else {
+        const opts = (q.options || []).map((opt, i) => {
+          let cls = 'trivia-opt'
+          if (t.answered) {
+            if (i === q.correct_index) cls += ' correct'
+            else if (i === t.selectedIndex) cls += ' wrong'
+          }
+          return `<button type="button" class="${cls}" onclick="handleTriviaAnswer(${i})" ${t.answered ? 'disabled' : ''}>${escapeHtml(opt)}</button>`
+        }).join('')
+
+        const feedback = t.answered ? `
+          <div class="trivia-feedback" style="color:${t.selectedIndex === q.correct_index ? '#2D4A3E' : '#9B5E5E'}">
+            ${t.selectedIndex === q.correct_index ? '¡Correcto! 🌟' : 'Incorrecto — esperá la siguiente pregunta'}
+          </div>` : ''
+
+        container.innerHTML = `
+          <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px;">
+            Pregunta ${(g.current_question || 0) + 1} de ${t.questions.length}
+          </div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:14px;">${escapeHtml(q.question)}</div>
+          ${opts}
+          ${feedback}
+        `
+      }
+    }
+    refreshGameHeight('trivia')
+  }
+
+  async function handleTriviaAnswer(idx) {
+    const t = state.trivia
+    if (t.answered || !t.game || t.game.status !== 'active') return
+    const name = requireGuestName()
+    if (!name) return
+
+    const q = t.questions[t.game.current_question]
+    if (!q) return
+
+    t.selectedIndex = idx
+    t.answered = true
+    const isCorrect = idx === q.correct_index
+    renderTrivia()
+
+    await sb.from('trivia_answers').insert({
+      game_id: t.game.id,
+      question_id: q.id,
+      guest_name: name,
+      selected_index: idx,
+      is_correct: isCorrect,
+    })
+  }
+
+  // ---------------- Actividad 3: Sorteo y votaciones ----------------
+  async function loadRaffleGame() {
+    const rg = state.raffleGame
+    const name = getSavedGuestName()
+
+    const [{ data: r }, { data: p }] = await Promise.all([
+      sb.from('raffles').select('*').eq('wedding_id', state.weddingId)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      sb.from('polls').select('*').eq('wedding_id', state.weddingId)
+        .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    ])
+    rg.raffle = r || null
+    rg.poll = p || null
+
+    if (rg.raffle) {
+      const { data: e } = await sb.from('raffle_entries').select('*').eq('raffle_id', rg.raffle.id)
+      rg.entries = e || []
+      rg.hasEntered = !!(name && rg.entries.some(en => en.guest_name === name))
+    }
+
+    if (rg.poll) {
+      const { data: v } = await sb.from('poll_votes').select('*').eq('poll_id', rg.poll.id)
+      rg.votes = v || []
+      rg.hasVoted = !!(name && rg.votes.some(v2 => v2.guest_name === name))
+    }
+
+    await sb.removeChannel(sb.channel('web-raffle-guest'))
+    const ch = sb.channel('web-raffle-guest')
+    if (rg.raffle) {
+      ch.on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'raffles',
+        filter: `id=eq.${rg.raffle.id}`
+      }, (payload) => {
+        rg.raffle = payload.new
+        updateSorteoStatus()
+        renderSorteo()
+      })
+    }
+    if (rg.poll) {
+      ch.on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'poll_votes',
+        filter: `poll_id=eq.${rg.poll.id}`
+      }, (payload) => {
+        if (!rg.votes.some(v => v.id && v.id === payload.new.id)) {
+          rg.votes = [...rg.votes, payload.new]
+        }
+        renderSorteo()
+      })
+    }
+    ch.subscribe()
+
+    updateSorteoStatus()
+    renderSorteo()
+  }
+
+  function updateSorteoStatus() {
+    const rg = state.raffleGame
+    const raffleActive = !!(rg.raffle && rg.raffle.status === 'open')
+    const pollActive = !!(rg.poll && rg.poll.status === 'active')
+    const isActive = raffleActive || pollActive
+    setGameStatus('sorteo', isActive, isActive ? 'Activo' : 'En espera')
+  }
+
+  function renderSorteo() {
+    const rg = state.raffleGame
+    const container = document.getElementById('sorteoContent')
+    const name = getSavedGuestName()
+    let html = ''
+
+    if (rg.raffle) {
+      html += `<div class="raffle-box">
+        <div class="raffle-title-label">Sorteo</div>
+        <div class="raffle-title-text">${escapeHtml(rg.raffle.title || '')}</div>`
+
+      if (rg.raffle.status === 'drawn') {
+        html += `
+          <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:6px;">Ganador</div>
+          <div class="raffle-winner">🎉 ${escapeHtml(rg.raffle.winner_name || '')}</div>
+          ${rg.raffle.winner_name && rg.raffle.winner_name === name ? '<div style="color:#fff;font-weight:600;margin-top:8px;">¡Sos vos!</div>' : ''}
+        `
+      } else if (rg.raffle.status === 'open') {
+        if (rg.hasEntered) {
+          html += `
+            <div style="color:var(--gold);font-weight:600;margin-bottom:6px;">✓ Ya estás participando</div>
+            <div style="color:rgba(255,255,255,0.6);font-size:13px;">${rg.entries.length} participantes inscriptos</div>
+          `
+        } else {
+          html += `<button type="button" class="btn btn-gold btn-block" onclick="handleRaffleEnter()">Participar</button>`
+        }
+      } else {
+        html += `<div style="color:rgba(255,255,255,0.6);font-size:13px;">Esperando que se abra el sorteo...</div>`
+      }
+      html += `</div>`
+    }
+
+    if (rg.poll) {
+      if (rg.poll.status !== 'active' && !rg.hasVoted) {
+        html += '<div class="empty-note">La votación todavía no está activa.</div>'
+      } else {
+        const totalVotes = rg.votes.length
+        const opts = (rg.poll.options || []).map((opt, i) => {
+          const count = rg.votes.filter(v => v.option_index === i).length
+          const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
+          const barHtml = rg.hasVoted
+            ? `<div class="poll-track"><div class="poll-fill" style="width:${pct}%"></div></div>` : ''
+          return `
+            <div class="poll-opt" ${rg.hasVoted ? '' : `onclick="handlePollVote(${i})" style="cursor:pointer;"`}>
+              <div class="poll-opt-row">
+                <span>${escapeHtml(opt)}</span>
+                ${rg.hasVoted ? `<span style="color:var(--gold);font-weight:600;">${pct}%</span>` : ''}
+              </div>
+              ${barHtml}
+            </div>
+          `
+        }).join('')
+
+        html += `
+          <div style="margin-top:14px;">
+            <div style="font-size:11px;color:var(--text-soft);font-weight:600;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">
+              Votación · ${totalVotes} votos
+            </div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px;">${escapeHtml(rg.poll.question || '')}</div>
+            ${opts}
+            ${!rg.hasVoted ? '<div style="font-size:12px;color:var(--text-soft);text-align:center;margin-top:4px;">Tocá una opción para votar</div>' : ''}
+          </div>
+        `
+      }
+    }
+
+    if (!rg.raffle && !rg.poll) {
+      html = '<div class="empty-note">Todavía no hay sorteo ni votación activos.</div>'
+    }
+
+    container.innerHTML = html
+    refreshGameHeight('sorteo')
+  }
+
+  async function handleRaffleEnter() {
+    const rg = state.raffleGame
+    const name = requireGuestName()
+    if (!name || !rg.raffle) return
+
+    const { error } = await sb.from('raffle_entries').insert({
+      raffle_id: rg.raffle.id, guest_name: name
+    })
+    if (error) return
+
+    rg.hasEntered = true
+    rg.entries = [...rg.entries, { guest_name: name }]
+    renderSorteo()
+  }
+
+  async function handlePollVote(optIdx) {
+    const rg = state.raffleGame
+    if (rg.hasVoted) return
+    const name = requireGuestName()
+    if (!name || !rg.poll) return
+
+    const { error } = await sb.from('poll_votes').insert({
+      poll_id: rg.poll.id, guest_name: name, option_index: optIdx
+    })
+    if (error) return
+
+    rg.hasVoted = true
+    rg.votes = [...rg.votes, { poll_id: rg.poll.id, guest_name: name, option_index: optIdx }]
+    renderSorteo()
+  }
+
+  // ---------------- Actividad 4: Botómetro ----------------
+  async function loadBotoSession() {
+    const b = state.boto
+    const { data: sess } = await sb.from('botometer_sessions')
+      .select('*').eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    b.session = sess || null
+
+    const savedTable = sessionStorage.getItem('bl_table_name')
+    if (savedTable) b.tableName = savedTable
+
+    await sb.removeChannel(sb.channel('web-boto-sessions'))
+    sb.channel('web-boto-sessions')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'botometer_sessions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => { onBotoSessionChange(payload.new) })
+      .subscribe()
+
+    updateBotoStatus()
+    renderBoto()
+  }
+
+  function updateBotoStatus() {
+    const isActive = !!(state.boto.session && state.boto.session.status === 'active')
+    setGameStatus('boto', isActive, isActive ? 'Activo' : 'En espera')
+  }
+
+  function onBotoSessionChange(newSession) {
+    const b = state.boto
+    b.session = newSession
+
+    if (newSession.status === 'active' && b.syncedSessionId !== newSession.id) {
+      b.syncedSessionId = newSession.id
+      b.clicks = 0
+      startBotoSync()
+      startBotoCountdown()
+    }
+    if (newSession.status === 'ended') {
+      stopBotoTimers()
+      syncBotoClicks()
+      loadBotoRanking()
+    }
+
+    updateBotoStatus()
+    renderBoto()
+  }
+
+  function startBotoCountdown() {
+    if (state.boto.countdownTimer) clearInterval(state.boto.countdownTimer)
+    function tick() {
+      const s = state.boto.session
+      if (!s || !s.started_at) return
+      const elapsed = (Date.now() - new Date(s.started_at).getTime()) / 1000
+      state.boto.secondsLeft = Math.max(0, Math.ceil(BOTO_ROUND_SECONDS - elapsed))
+      const el = document.getElementById('botoCountdown')
+      if (el) el.textContent = state.boto.secondsLeft + 's'
+    }
+    tick()
+    state.boto.countdownTimer = setInterval(tick, 1000)
+  }
+
+  function startBotoSync() {
+    if (state.boto.syncTimer) clearInterval(state.boto.syncTimer)
+    state.boto.syncTimer = setInterval(syncBotoClicks, BOTO_SYNC_INTERVAL_MS)
+  }
+
+  function stopBotoTimers() {
+    if (state.boto.syncTimer) { clearInterval(state.boto.syncTimer); state.boto.syncTimer = null }
+    if (state.boto.countdownTimer) { clearInterval(state.boto.countdownTimer); state.boto.countdownTimer = null }
+  }
+
+  async function syncBotoClicks() {
+    const b = state.boto
+    const name = getSavedGuestName()
+    if (!b.session || !name || !b.tableName) return
+    await sb.from('botometer').upsert({
+      wedding_id: state.weddingId,
+      guest_name: name,
+      table_name: b.tableName,
+      session_id: b.session.id,
+      clicks: b.clicks,
+    }, { onConflict: 'wedding_id,guest_name,session_id' })
+  }
+
+  async function loadBotoRanking() {
+    const b = state.boto
+    if (!b.session) return
+    const { data: rows } = await sb.from('botometer').select('*').eq('session_id', b.session.id)
+    const map = {}
+    ;(rows || []).forEach(row => {
+      map[row.table_name] = (map[row.table_name] || 0) + (row.clicks || 0)
+    })
+    b.ranking = Object.entries(map)
+      .map(([table, totalClicks]) => ({ table, totalClicks }))
+      .sort((a, c) => c.totalClicks - a.totalClicks)
+    renderBoto()
+  }
+
+  function handleBotoTableSubmit() {
+    const name = requireGuestName()
+    if (!name) return
+    const input = document.getElementById('botoTableInput')
+    const table = (input.value || '').trim()
+    if (!table) { alert('Ingresá el nombre de tu mesa'); return }
+    state.boto.tableName = table
+    sessionStorage.setItem('bl_table_name', table)
+    renderBoto()
+  }
+
+  function handleBotoTap() {
+    state.boto.clicks += 1
+    const el = document.getElementById('botoClicks')
+    if (el) el.textContent = state.boto.clicks + ' clics'
+  }
+
+  function renderBoto() {
+    const container = document.getElementById('botoContent')
+    const b = state.boto
+    const s = b.session
+
+    if (!b.tableName) {
+      container.innerHTML = `
+        <label class="field-label">Nombre de tu mesa</label>
+        <input id="botoTableInput" class="text-input field-gap" type="text" placeholder="Ej: Mesa 5">
+        <button type="button" class="btn btn-primary btn-block" onclick="handleBotoTableSubmit()">Entrar</button>
+      `
+    } else if (!s || s.status === 'waiting') {
+      container.innerHTML = '<div class="empty-note">⏳ Esperá que los novios inicien el botómetro.</div>'
+    } else if (s.status === 'active') {
+      container.innerHTML = `
+        <div class="boto-countdown" id="botoCountdown">${b.secondsLeft}s</div>
+        <button type="button" class="boto-tap-btn" onclick="handleBotoTap()">¡TOCÁ!</button>
+        <div class="boto-clicks" id="botoClicks">${b.clicks} clics</div>
+      `
+    } else if (s.status === 'ended') {
+      container.innerHTML = `
+        ${b.ranking.map((entry, i) => `
+          <div class="boto-rank-row">
+            <span style="font-size:18px;width:28px;">${MEDALS_WEB[i] || (i + 1) + 'º'}</span>
+            <span style="flex:1;font-size:14px;font-weight:600;">Mesa ${escapeHtml(entry.table)}</span>
+            <span style="color:var(--gold);font-weight:700;">${entry.totalClicks}</span>
+          </div>
+        `).join('')}
+        <div style="text-align:center;font-size:12.5px;color:var(--text-soft);margin-top:10px;">Tus clics: ${b.clicks}</div>
+      `
+    }
+    refreshGameHeight('boto')
+  }
+
+  // ---------------- Actividad 5: Emojis para la proyección ----------------
+  function renderEmojiButtons() {
+    const grid = document.getElementById('emojiGrid')
+    grid.innerHTML = FLOATING_EMOJIS_WEB.map(e => `
+      <button type="button" class="emoji-btn" onclick="handleSendEmojiWeb('${e}')" ${state.emojiCooldownLeft > 0 ? 'disabled' : ''}>
+        ${e}
+        ${state.emojiCooldownLeft > 0 ? `<span class="emoji-cooldown-badge">${state.emojiCooldownLeft}</span>` : ''}
+      </button>
+    `).join('')
+  }
+
+  async function handleSendEmojiWeb(emoji) {
+    if (state.emojiCooldownLeft > 0) return
+    const name = getSavedGuestName()
+    startEmojiCooldown()
+    await sb.from('emoji_reactions').insert({
+      wedding_id: state.weddingId,
+      emoji: emoji,
+      guest_name: name || null,
+    })
+  }
+
+  function startEmojiCooldown() {
+    state.emojiCooldownLeft = 3
+    renderEmojiButtons()
+    if (state.emojiCooldownTimer) clearInterval(state.emojiCooldownTimer)
+    state.emojiCooldownTimer = setInterval(() => {
+      state.emojiCooldownLeft -= 1
+      if (state.emojiCooldownLeft <= 0) {
+        state.emojiCooldownLeft = 0
+        clearInterval(state.emojiCooldownTimer)
+        state.emojiCooldownTimer = null
+      }
+      renderEmojiButtons()
+    }, 1000)
   }
 
   // ---------------- Regalos ----------------
