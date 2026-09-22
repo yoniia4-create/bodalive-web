@@ -178,7 +178,7 @@
   /* ---------- Pantalla 2: Hero ---------- */
   .hero {
     background: var(--primary);
-    padding: 56px 24px 40px;
+    padding: 20px 20px 16px;
     text-align: center;
   }
 
@@ -187,17 +187,17 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     color: rgba(201,169,110,0.85);
-    margin-bottom: 14px;
+    margin-bottom: 6px;
   }
 
   .hero-names {
     font-family: 'Playfair Display', serif;
     font-style: italic;
     font-weight: 500;
-    font-size: 40px;
+    font-size: 22px;
     color: #fff;
     line-height: 1.15;
-    margin-bottom: 24px;
+    margin-bottom: 10px;
   }
 
   .countdown {
@@ -205,27 +205,27 @@
     justify-content: center;
     align-items: flex-start;
     gap: 6px;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
   }
 
-  .cd-item { min-width: 52px; text-align: center; }
+  .cd-item { min-width: 40px; text-align: center; }
   .cd-num {
-    font-size: 30px;
+    font-size: 18px;
     font-weight: 300;
     color: #fff;
     font-variant-numeric: tabular-nums;
   }
   .cd-label {
-    font-size: 9px;
+    font-size: 7px;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: rgba(255,255,255,0.55);
     margin-top: 2px;
   }
-  .cd-sep { font-size: 22px; color: rgba(255,255,255,0.3); padding-top: 4px; }
+  .cd-sep { font-size: 16px; color: rgba(255,255,255,0.3); padding-top: 1px; }
 
   .hero-date {
-    font-size: 13px;
+    font-size: 9px;
     color: rgba(255,255,255,0.75);
     text-transform: capitalize;
   }
@@ -410,7 +410,7 @@
 
 
   /* Próximos eventos */
-  .section { padding: 32px 20px 30px; }
+  .section { position: static; padding: 32px 20px 30px; }
   .section-title {
     font-size: 11px;
     font-weight: 700;
@@ -1014,9 +1014,40 @@
   }
 
   // ---------------- Acordeón ----------------
+  // Al terminar de abrir, sacamos el límite de altura (max-height: none) en
+  // vez de dejar fijo el scrollHeight capturado en ese instante. Si no, el
+  // contenido que cambia después (fotos por Realtime, preguntas de trivia,
+  // resultados de votación) queda recortado por un max-height desactualizado
+  // y el bloque siguiente de la página (p. ej. "Próximos eventos") aparenta
+  // superponerse sobre el contenido cortado del acordeón.
+  function onAccordionOpenEnd(e) {
+    if (e.propertyName !== 'max-height') return
+    const panelEl = e.currentTarget
+    panelEl.removeEventListener('transitionend', onAccordionOpenEnd)
+    if (panelEl.style.maxHeight !== '0px') {
+      panelEl.style.maxHeight = 'none'
+    }
+  }
+
+  function openAccordion(panelEl) {
+    panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+    panelEl.addEventListener('transitionend', onAccordionOpenEnd)
+  }
+
+  function closeAccordion(panelEl) {
+    if (panelEl.style.maxHeight === 'none') {
+      // No se puede animar desde "none": primero fijamos la altura actual
+      // en píxeles y forzamos reflow para que el navegador la registre.
+      panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+      panelEl.offsetHeight
+    }
+    requestAnimationFrame(() => { panelEl.style.maxHeight = '0px' })
+  }
+
   function refreshPanelHeight(key) {
     if (activePanel !== key) return
     const panelEl = document.getElementById(PANEL_IDS[key])
+    if (panelEl.style.maxHeight === 'none') return
     panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
   }
 
@@ -1024,10 +1055,10 @@
     const panelEl = document.getElementById(PANEL_IDS[key])
     const btnEl = document.getElementById('btn-' + key)
     if (isOpen) {
-      panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+      openAccordion(panelEl)
       btnEl.classList.add('panel-open')
     } else {
-      panelEl.style.maxHeight = '0px'
+      closeAccordion(panelEl)
       btnEl.classList.remove('panel-open')
     }
   }
@@ -1046,12 +1077,16 @@
   // ---------------- Sub-acordeón: Juegos y actividades ----------------
   function setGameOpen(key, isOpen) {
     const panelEl = document.getElementById(GAME_PANEL_IDS[key])
-    panelEl.style.maxHeight = isOpen ? panelEl.scrollHeight + 'px' : '0px'
+    if (isOpen) openAccordion(panelEl)
+    else closeAccordion(panelEl)
   }
 
   function refreshGameHeight(key) {
     if (activeGame !== key) return
-    setGameOpen(key, true)
+    const panelEl = document.getElementById(GAME_PANEL_IDS[key])
+    if (panelEl.style.maxHeight !== 'none') {
+      panelEl.style.maxHeight = panelEl.scrollHeight + 'px'
+    }
     refreshPanelHeight('juegos')
   }
 
@@ -1734,6 +1769,10 @@
     await sb.removeChannel(sb.channel('web-boto-sessions'))
     sb.channel('web-boto-sessions')
       .on('postgres_changes', {
+        // OJO: cada ronda nueva es un INSERT (ver admin/botometer.tsx
+        // handleStart, que hace .insert(...) con status:'active'), y solo
+        // el cierre de ronda es un UPDATE (endRound). Filtrar a 'UPDATE'
+        // haría que el invitado nunca se entere de que arrancó una ronda.
         event: '*', schema: 'public', table: 'botometer_sessions',
         filter: `wedding_id=eq.${state.weddingId}`
       }, (payload) => { onBotoSessionChange(payload.new) })
@@ -1741,6 +1780,13 @@
 
     updateBotoStatus()
     renderBoto()
+
+    // Si la ronda ya había terminado antes de que este invitado entrara a
+    // la página, onBotoSessionChange nunca se dispara (no hay un UPDATE en
+    // vivo que lo detone), así que el ranking hay que pedirlo acá también.
+    if (b.session && b.session.status === 'ended') {
+      await loadBotoRanking()
+    }
   }
 
   function updateBotoStatus() {
