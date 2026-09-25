@@ -4,18 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Proyección · BodaLive</title>
-<meta name="theme-color" content="#1A2E28">
+<meta name="theme-color" content="#0F1E16">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
-    --bg: #1A2E28;
-    --bg-deep: #0F1F1A;
+    --bg: #0F1E16;
+    --black: #000;
     --gold: #C9A96E;
-    --white-soft: rgba(255,255,255,0.6);
-    --line: rgba(255,255,255,0.12);
+    --green: #2D6A4F;
+    --white-soft: rgba(255,255,255,0.4);
+    --card: rgba(255,255,255,0.05);
+    --line: rgba(255,255,255,0.08);
     --fade-ms: 500ms;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,113 +39,114 @@
   }
   body.moment-on #normalLayer { opacity: 0; }
 
-  .header { padding: 28px 24px 18px; text-align: center; flex: none; }
+  .header {
+    flex: none; text-align: center;
+    padding: 18px 24px 14px;
+    margin: 0 24px 20px;
+    border-bottom: 1px solid var(--line);
+  }
   .names {
     font-family: Georgia, 'Times New Roman', serif;
-    font-style: italic; font-size: 36px; color: #fff; margin-bottom: 6px;
+    font-style: italic; font-size: 28px; font-weight: normal;
+    color: #fff; margin-bottom: 4px;
   }
-  .date { font-size: 14px; color: var(--white-soft); margin-bottom: 4px; min-height: 17px; }
-  .photo-count { font-size: 13px; color: var(--gold); font-weight: 600; letter-spacing: 0.5px; }
+  .meta { font-size: 12px; color: var(--white-soft); letter-spacing: 0.3px; min-height: 15px; }
+  .meta-sep { margin: 0 8px; }
+  #date:empty + .meta-sep { display: none; }
 
-  .body { flex: 1; min-height: 0; display: flex; padding: 0 24px 24px; gap: 24px; }
+  .body { flex: 1; min-height: 0; display: flex; padding: 0 24px 24px; gap: 32px; }
   .grid-area { flex: 0 0 65%; min-width: 0; position: relative; overflow: hidden; }
-  .sidebar { flex: 1; min-width: 0; overflow: hidden; padding-top: 4px; }
+  .sidebar { flex: 1; min-width: 0; overflow: hidden; }
 
   .grid {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, var(--tile, 0px));
     grid-auto-rows: var(--tile, 0px);
-    gap: 12px;
+    gap: 4px;
     justify-content: center;
   }
   .tile {
-    position: relative; border-radius: 12px; overflow: hidden;
-    background: var(--bg-deep);
+    position: relative; border-radius: 4px; overflow: hidden;
+    background: var(--black);
     animation: fadeIn 600ms ease both;
   }
   .tile.no-anim { animation: none; }
   .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tile-like {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(0,0,0,0.55); border-radius: 20px;
-    padding: 4px 8px; font-size: 12px; font-weight: 600;
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.4); border-radius: 4px;
+    padding: 2px 6px; font-size: 11px; font-weight: 500;
   }
   .tile-name {
     position: absolute; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    padding: 8px 10px; font-size: 13px; font-weight: 600;
+    background: rgba(0,0,0,0.4);
+    padding: 4px 8px; font-size: 11px; font-weight: 500;
+    color: rgba(255,255,255,0.9);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .empty { color: rgba(255,255,255,0.5); font-size: 14px; padding: 24px; }
+  .empty { color: var(--white-soft); font-size: 14px; padding: 24px; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  /* Lluvia de miniaturas */
-  .rain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .rain img {
-    position: absolute; top: 0;
-    width: 60px; height: 60px; border-radius: 8px; object-fit: cover;
-    opacity: 0.12;
-    transform: translateY(-60px);
-    animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
-  }
-  @keyframes fall {
-    from { transform: translateY(-60px); }
-    to { transform: translateY(calc(100vh + 60px)); }
-  }
 
   /* Podio y misión */
   .side-title {
-    font-size: 13px; font-weight: 700; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+    font-size: 11px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
   }
   .podium-card {
-    border: 1px solid var(--line); background: rgba(255,255,255,0.03);
-    border-radius: 14px; padding: 12px; margin-bottom: 12px; text-align: center;
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
   }
-  .podium-medal { font-size: 26px; margin-bottom: 4px; }
-  .podium-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-  .podium-points { font-size: 13px; font-weight: 700; color: var(--gold); }
+  .podium-medal { font-size: 36px; line-height: 1; flex: none; }
+  .podium-info { min-width: 0; }
+  .podium-name {
+    font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .podium-points { font-size: 14px; font-weight: 500; color: var(--gold); }
 
-  #missionBox { margin-top: 22px; }
+  #missionBox { margin-top: 28px; }
   .mission-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .mission-table { flex: 0 0 38%; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .mission-table { flex: 0 0 38%; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track { flex: 1; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
   .fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.5s ease; }
-  .mission-count { flex: none; font-size: 12px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .mission-count { flex: none; font-size: 12px; font-weight: 600; color: var(--gold); font-variant-numeric: tabular-nums; }
   .mission-empty { font-size: 13px; color: var(--white-soft); }
 
   /* ---------- Foto del momento ---------- */
   #momentLayer {
     position: absolute; inset: 0;
     display: flex; flex-direction: column; align-items: center;
-    padding: 28px 24px 24px;
+    padding: 24px 24px 28px;
     background: var(--bg);
     opacity: 0; pointer-events: none;
     transition: opacity var(--fade-ms) ease;
   }
   body.moment-on #momentLayer { opacity: 1; }
   .moment-eyebrow {
-    font-size: 14px; font-weight: 700; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 4px;
+    font-size: 11px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
   }
-  .moment-countdown { font-size: 64px; font-weight: 700; line-height: 1.1; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+  .moment-countdown { font-size: 56px; font-weight: 300; line-height: 1.1; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
   .moment-result {
     font-family: Georgia, 'Times New Roman', serif; font-style: italic;
-    font-size: 36px; margin: 14px 0 18px;
+    font-size: 32px; margin: 12px 0 18px;
   }
   .moment-photo-box {
     width: 70%; flex: 1; min-height: 0;
-    border-radius: 16px; overflow: hidden; background: var(--bg-deep);
+    border-radius: 4px; overflow: hidden; background: var(--black);
   }
   .moment-photo-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .moment-bars { width: 70%; margin-top: 18px; }
-  .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 12px; }
-  .bar-label { flex: 0 0 150px; font-size: 16px; font-weight: 600; }
-  .bar-row .track { height: 18px; }
+  .moment-bars { width: 70%; margin-top: 20px; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 14px; }
+  .bar-label { flex: 0 0 140px; font-size: 15px; font-weight: 500; }
+  .bar-row .track { height: 10px; }
   .bar-row .fill { transition: width 0.4s ease; }
-  .bar-value { flex: 0 0 110px; text-align: right; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .moment-total { text-align: center; font-size: 14px; color: var(--white-soft); margin-top: 4px; }
+  .fill-like { background: var(--green); }
+  .fill-meh { background: rgba(255,255,255,0.3); }
+  .bar-value { flex: 0 0 110px; text-align: right; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .moment-total { text-align: center; font-size: 12px; color: var(--white-soft); margin-top: 6px; }
 
   /* Emojis flotantes */
   .emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -163,8 +166,8 @@
     align-items: center; justify-content: center; padding: 32px; text-align: center;
     background: var(--bg); z-index: 10;
   }
-  .notice-icon { font-size: 56px; margin-bottom: 16px; }
-  .notice-text { color: rgba(255,255,255,0.7); font-size: 16px; line-height: 1.5; max-width: 420px; }
+  .notice-icon { font-size: 48px; margin-bottom: 16px; }
+  .notice-text { color: rgba(255,255,255,0.6); font-size: 15px; line-height: 1.5; max-width: 420px; }
   .hidden { display: none !important; }
 
   #rotateNotice { display: none; }
@@ -178,12 +181,10 @@
 <div id="normalLayer">
   <div class="header">
     <div class="names" id="names">&nbsp;</div>
-    <div class="date" id="date"></div>
-    <div class="photo-count" id="photoCount"></div>
+    <div class="meta"><span id="date"></span><span class="meta-sep">·</span><span id="photoCount"></span></div>
   </div>
   <div class="body">
     <div class="grid-area" id="gridArea">
-      <div class="rain" id="rain"></div>
       <div class="grid" id="grid"></div>
     </div>
     <div class="sidebar">
@@ -205,12 +206,12 @@
   <div class="moment-bars">
     <div class="bar-row">
       <span class="bar-label">❤️ Me encanta</span>
-      <div class="track"><div class="fill" id="likeFill" style="width:0%;background:#2D9D5F;"></div></div>
+      <div class="track"><div class="fill fill-like" id="likeFill" style="width:0%;"></div></div>
       <span class="bar-value" id="likeValue">0% · 0</span>
     </div>
     <div class="bar-row">
       <span class="bar-label">😐 Meh</span>
-      <div class="track"><div class="fill" id="mehFill" style="width:0%;background:#8A8F8C;"></div></div>
+      <div class="track"><div class="fill fill-meh" id="mehFill" style="width:0%;"></div></div>
       <span class="bar-value" id="mehValue">0% · 0</span>
     </div>
     <div class="moment-total" id="momentTotal">0 votos recibidos</div>
@@ -236,11 +237,10 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
   const GRID_COLUMNS = 3
-  const GRID_GAP = 12
+  const GRID_GAP = 4
   const MAX_PHOTOS = 12
   const MEDALS = ['🥇', '🥈', '🥉']
   const NO_TABLE = 'Sin mesa'
-  const THUMB_COUNT = 10
   const MAX_FLOATING_EMOJIS = 3
   const EMOJI_DURATION = 3000
   const MOMENT_SECONDS = 15
@@ -317,7 +317,6 @@
     state.photos = data || []
     state.totalCount = typeof count === 'number' ? count : state.photos.length
     renderGrid(null)
-    renderRain()
 
     await sb.removeChannel(sb.channel('projection-web-photos'))
     sb.channel('projection-web-photos')
@@ -331,7 +330,6 @@
         state.photos = [photo, ...state.photos].slice(0, MAX_PHOTOS)
         state.totalCount += 1
         renderGrid(photo.id)
-        if (state.photos.length <= THUMB_COUNT) renderRain()
       })
       .subscribe()
   }
@@ -363,23 +361,6 @@
     const byHeight = (area.clientHeight - GRID_GAP * (rows - 1)) / rows
     const tile = Math.max(0, Math.floor(Math.min(byWidth, byHeight)))
     document.getElementById('grid').style.setProperty('--tile', tile + 'px')
-  }
-
-  // ---------------- Lluvia de miniaturas ----------------
-  function renderRain() {
-    const rain = document.getElementById('rain')
-    if (!state.photos.length) { rain.innerHTML = ''; return }
-    const width = rain.clientWidth || window.innerWidth * 0.65
-    let html = ''
-    for (let i = 0; i < THUMB_COUNT; i++) {
-      const photo = state.photos[i % state.photos.length]
-      const x = Math.random() * Math.max(width - 60, 0)
-      const duration = 14 + Math.random() * 8
-      const delay = -Math.random() * duration
-      html += `<img src="${escapeHtml(photo.url)}" alt=""
-        style="left:${x}px;animation-duration:${duration}s;animation-delay:${delay}s;">`
-    }
-    rain.innerHTML = html
   }
 
   // ---------------- Podio por mesa ----------------
@@ -427,8 +408,10 @@
       return `
         <div class="podium-card">
           <div class="podium-medal">${medal}</div>
-          <div class="podium-name">${entry ? escapeHtml(tableLabel(entry.name)) : '—'}</div>
-          <div class="podium-points">${entry ? entry.points + ' pts' : '—'}</div>
+          <div class="podium-info">
+            <div class="podium-name">${entry ? escapeHtml(tableLabel(entry.name)) : '—'}</div>
+            <div class="podium-points">${entry ? entry.points + ' pts' : '—'}</div>
+          </div>
         </div>
       `
     }).join('')
@@ -669,7 +652,7 @@
   }
 
   // ---------------- Arranque ----------------
-  window.addEventListener('resize', () => { sizeGrid(); renderRain() })
+  window.addEventListener('resize', sizeGrid)
   sizeGrid()
   init().then(sizeGrid)
 </script>
