@@ -550,6 +550,19 @@
     font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
   }
   .mission-photo-btn:disabled { opacity: 0.5; cursor: default; }
+  /* Foto del momento */
+  .moment-photo { width: 100%; border-radius: 12px; display: block; margin-bottom: 12px; background: var(--rose); }
+  .moment-vote-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .moment-vote-btn {
+    padding: 20px 0; border-radius: 14px; border: 1.5px solid var(--border);
+    background: #fff; font-size: 16px; font-weight: 700; color: var(--text);
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .moment-vote-btn:active { transform: scale(0.98); }
+  .moment-vote-btn:disabled { opacity: 0.5; cursor: default; }
+  .moment-vote-btn.chosen { opacity: 1; border-color: var(--gold); background: var(--cream); }
+  .moment-note { text-align: center; font-size: 13px; font-weight: 600; margin-top: 12px; color: var(--primary); }
+
   .mission-section-label { font-size: 11px; letter-spacing: 1px; color: var(--text-soft); text-transform: uppercase; font-weight: 600; margin: 16px 0 8px; }
 
   /* Emojis */
@@ -815,6 +828,23 @@
             </div>
           </div>
 
+          <!-- Foto del momento -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('momento')">
+              <div class="game-header-left">
+                <span class="game-icon">🗳️</span>
+                <div>
+                  <div class="game-title">Foto del momento</div>
+                  <div class="game-desc">Votá la foto que aparece en pantalla</div>
+                </div>
+              </div>
+              <span class="game-status status-waiting" id="statusMomento">⚪ En espera</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubMomento">
+              <div class="game-sub-panel-inner" id="momentoContent"></div>
+            </div>
+          </div>
+
           <!-- Emojis para la proyección -->
           <div class="game-card">
             <button type="button" class="game-header" onclick="toggleGame('emojis')">
@@ -906,6 +936,7 @@
       session: null, tableName: '', clicks: 0, secondsLeft: 60,
       ranking: [], syncTimer: null, countdownTimer: null, syncedSessionId: null,
     },
+    moment: { session: null, photo: null, votes: [], myVote: null, voting: false, countdownTimer: null, secondsLeft: 15 },
     mission: { mission: null, items: [], photos: [], pendingItemId: null, uploadingItemId: null },
     emojiCooldownLeft: 0,
     emojiCooldownTimer: null,
@@ -931,9 +962,10 @@
     sorteo: 'gameSubSorteo',
     boto: 'gameSubBoto',
     mision: 'gameSubMision',
+    momento: 'gameSubMomento',
     emojis: 'gameSubEmojis',
   }
-  const STATUS_EL_IDS = { trivia: 'statusTrivia', sorteo: 'statusSorteo', boto: 'statusBoto', mision: 'statusMision' }
+  const STATUS_EL_IDS = { trivia: 'statusTrivia', sorteo: 'statusSorteo', boto: 'statusBoto', mision: 'statusMision', momento: 'statusMomento' }
   let activeGame = null
 
   function formatARS(n) {
@@ -1038,6 +1070,7 @@
       loadRaffleGame(),
       loadBotoSession(),
       loadMissionGame(),
+      loadMomentGame(),
     ])
     renderEmojiButtons()
   }
@@ -2383,6 +2416,193 @@
       setStatus('Error: ' + err.message)
     }
     setTimeout(() => setStatus(''), 3000)
+  }
+
+  // ---------------- Actividad: Foto del momento ----------------
+  // Cada ronda es un INSERT en photo_moment_sessions con una foto nueva; los
+  // votos se identifican por photo_id (una foto sale en una sola ronda).
+  const MOMENT_ROUND_SECONDS = 15
+  const MOMENT_WIN_THRESHOLD = 70
+
+  async function loadMomentGame() {
+    const { data: sess } = await sb.from('photo_moment_sessions').select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    await setMomentSession(sess || null)
+
+    await sb.removeChannel(sb.channel('web-moment-sessions'))
+    sb.channel('web-moment-sessions')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'photo_moment_sessions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const next = payload.new
+        const current = state.moment.session
+        if (!next || !next.id) return
+        if (current && next.id !== current.id &&
+            new Date(next.created_at) < new Date(current.created_at)) return
+        setMomentSession(next)
+      })
+      .subscribe()
+  }
+
+  async function setMomentSession(sess) {
+    const mo = state.moment
+    const changed = (mo.session && mo.session.id) !== (sess && sess.id)
+    mo.session = sess
+
+    if (changed) {
+      mo.photo = null
+      mo.votes = []
+      mo.myVote = null
+      await sb.removeChannel(sb.channel('web-moment-votes'))
+      if (sess) {
+        const name = getSavedGuestName()
+        const [{ data: photo }, { data: votes }] = await Promise.all([
+          sb.from('photos').select('*').eq('id', sess.photo_id).maybeSingle(),
+          sb.from('photo_votes').select('*')
+            .eq('wedding_id', state.weddingId).eq('photo_id', sess.photo_id),
+        ])
+        mo.photo = photo || null
+        mo.votes = votes || []
+        const mine = name && mo.votes.find(v => v.guest_name === name)
+        mo.myVote = mine ? mine.vote : null
+
+        sb.channel('web-moment-votes')
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'photo_votes',
+            filter: `photo_id=eq.${sess.photo_id}`
+          }, (payload) => {
+            if (mo.votes.some(v => v.id === payload.new.id)) return
+            mo.votes = [...mo.votes, payload.new]
+            if (mo.session && mo.session.status === 'ended') renderMoment()
+          })
+          .subscribe()
+      }
+    } else if (sess && sess.status === 'ended') {
+      // Al terminar se recuentan los votos por si se perdió algún evento
+      const { data: votes } = await sb.from('photo_votes').select('*')
+        .eq('wedding_id', state.weddingId).eq('photo_id', sess.photo_id)
+      mo.votes = votes || mo.votes
+    }
+
+    const isActive = !!(sess && sess.status === 'active')
+    setGameStatus('momento', isActive, isActive ? 'Votando' : 'En espera')
+    startMomentCountdown()
+    renderMoment()
+  }
+
+  function momentSecondsLeft() {
+    const sess = state.moment.session
+    if (!sess || !sess.started_at) return 0
+    const elapsed = (Date.now() - new Date(sess.started_at).getTime()) / 1000
+    return Math.max(0, Math.ceil(MOMENT_ROUND_SECONDS - elapsed))
+  }
+
+  // Solo actualiza el número; re-renderiza todo una vez al llegar a 0
+  function startMomentCountdown() {
+    const mo = state.moment
+    clearInterval(mo.countdownTimer)
+    mo.countdownTimer = null
+    if (!mo.session || mo.session.status !== 'active') return
+    mo.secondsLeft = momentSecondsLeft()
+    mo.countdownTimer = setInterval(() => {
+      const left = momentSecondsLeft()
+      if (left === mo.secondsLeft) return
+      mo.secondsLeft = left
+      const el = document.getElementById('momentoCountdown')
+      if (el) el.textContent = left + 's'
+      if (left <= 0) {
+        clearInterval(mo.countdownTimer)
+        mo.countdownTimer = null
+        renderMoment()
+      }
+    }, 250)
+  }
+
+  function renderMoment() {
+    const mo = state.moment
+    const el = document.getElementById('momentoContent')
+    const sess = mo.session
+
+    if (!sess || (sess.status !== 'active' && sess.status !== 'ended') || !mo.photo) {
+      el.innerHTML = '<div class="empty-note">Esperá que los novios activen la foto del momento</div>'
+      refreshGameHeight('momento')
+      return
+    }
+
+    const photoHtml = `<img class="moment-photo" src="${mo.photo.url}" onload="refreshGameHeight('momento')">`
+
+    if (sess.status === 'active') {
+      const left = momentSecondsLeft()
+      const closed = left <= 0
+      const voted = !!mo.myVote
+      const disabled = voted || closed || mo.voting
+      el.innerHTML = `
+        ${photoHtml}
+        <div class="boto-countdown" id="momentoCountdown">${left}s</div>
+        <div class="moment-vote-row">
+          <button type="button" class="moment-vote-btn ${mo.myVote === 'like' ? 'chosen' : ''}"
+            onclick="handleMomentVote('like')" ${disabled ? 'disabled' : ''}>❤️ Me encanta</button>
+          <button type="button" class="moment-vote-btn ${mo.myVote === 'meh' ? 'chosen' : ''}"
+            onclick="handleMomentVote('meh')" ${disabled ? 'disabled' : ''}>😐 Meh</button>
+        </div>
+        ${voted ? '<div class="moment-note">¡Voto registrado!</div>'
+          : closed ? '<div class="moment-note">Votación cerrada, esperando el resultado...</div>' : ''}
+      `
+      refreshGameHeight('momento')
+      return
+    }
+
+    // Terminada: resultado y autor de la foto
+    const likes = mo.votes.filter(v => v.vote === 'like').length
+    const total = mo.votes.filter(v => v.vote === 'like' || v.vote === 'meh').length
+    const pct = total > 0 ? Math.round((likes / total) * 100) : 0
+    const author = escapeHtml(mo.photo.guest_name || 'un invitado')
+    el.innerHTML = `
+      ${photoHtml}
+      <div class="poll-opt">
+        <div class="poll-opt-row">
+          <span>❤️ ${pct}% de likes</span>
+          <span style="color:var(--text-soft);">${total} ${total === 1 ? 'voto' : 'votos'}</span>
+        </div>
+        <div class="poll-track"><div class="poll-fill" style="width:${pct}%;"></div></div>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-top:10px;">📸 Foto de ${author}</div>
+      ${pct > MOMENT_WIN_THRESHOLD
+        ? `<div class="moment-note" style="text-align:left;color:var(--gold);">🏆 ¡Esta foto ganó puntos para ${author}!</div>`
+        : ''}
+    `
+    refreshGameHeight('momento')
+  }
+
+  async function handleMomentVote(vote) {
+    const mo = state.moment
+    const sess = mo.session
+    if (!sess || sess.status !== 'active' || mo.myVote || mo.voting) return
+    if (momentSecondsLeft() <= 0) return
+    const name = requireGuestName()
+    if (!name) return
+
+    mo.voting = true
+    renderMoment()
+    const { data, error } = await sb.from('photo_votes').insert({
+      wedding_id: state.weddingId,
+      photo_id: sess.photo_id,
+      guest_name: name,
+      vote,
+    }).select().single()
+    mo.voting = false
+
+    if (error) {
+      // 23505 = ya votó (unique constraint): se muestra como registrado
+      if (error.code === '23505') mo.myVote = vote
+      else alert('No se pudo registrar el voto: ' + error.message)
+    } else {
+      mo.myVote = vote
+      if (data && !mo.votes.some(v => v.id === data.id)) mo.votes = [...mo.votes, data]
+    }
+    renderMoment()
   }
 
   // ---------------- Actividad 5: Emojis para la proyección ----------------
