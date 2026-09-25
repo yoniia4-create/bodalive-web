@@ -2862,6 +2862,19 @@
 
   // Permitir Enter para ingresar el código
   document.addEventListener('DOMContentLoaded', () => {
+    // Link del QR de cada mesa: ?code=INVITE_CODE&mesa=NOMBRE_MESA
+    const params = new URLSearchParams(location.search)
+    const codeParam = (params.get('code') || '').trim().toUpperCase()
+    const mesaParam = (params.get('mesa') || '').trim()
+    if (codeParam) {
+      document.getElementById('inputCode').value = codeParam
+      document.getElementById('inputPhone').focus()
+    }
+    if (mesaParam) {
+      localStorage.setItem('table_name', mesaParam)
+      localStorage.setItem('bl_table_name', mesaParam)
+    }
+
     document.getElementById('inputCode').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleJoin()
     })
