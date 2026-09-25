@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR por mesa · BodaLive</title>
+<meta name="theme-color" content="#FFFFFF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --green: #2D4A3E;
+    --green-dark: #1A2E28;
+    --gold: #C9A96E;
+    --text-soft: #7A9088;
+    --line: #E8E0D8;
+    --cream: #FDFAF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #fff;
+    color: var(--green-dark);
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Pantalla ---------- */
+  .page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 56px; }
+
+  .header { text-align: center; margin-bottom: 28px; }
+  .logo { font-size: 14px; font-weight: 600; color: var(--green); letter-spacing: 0.3px; margin-bottom: 14px; }
+  .title { font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: normal; color: var(--green-dark); }
+  .title em { color: var(--green); }
+  .subtitle { font-size: 13px; color: var(--text-soft); margin-top: 8px; }
+
+  .print-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 12px;
+    padding: 14px 24px; font-size: 15px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+  }
+  .print-btn:hover { background: var(--green-dark); }
+  .print-btn svg { width: 18px; height: 18px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    border: 1px solid var(--line); border-radius: 16px;
+    background: #fff;
+    padding: 24px 20px 20px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .card-couple {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px; min-height: 12px;
+  }
+  .card-name {
+    font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+    font-size: 26px; color: var(--green-dark); line-height: 1.2;
+    margin-bottom: 16px; word-break: break-word;
+  }
+  .qr { width: 100%; max-width: 200px; aspect-ratio: 1; }
+  .qr img, .qr canvas { width: 100% !important; height: auto !important; display: block; }
+  .card-divider { width: 32px; height: 1px; background: var(--gold); margin: 16px 0 12px; }
+  .card-scan { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; color: var(--green); }
+  .card-brand { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-soft); margin-top: 10px; }
+
+  .notice { text-align: center; padding: 64px 16px; color: var(--text-soft); font-size: 15px; line-height: 1.6; }
+  .notice-icon { font-size: 40px; margin-bottom: 12px; }
+  .hidden { display: none !important; }
+
+  /* ---------- Impresión: una mesa por hoja ---------- */
+  @page { size: A4; margin: 0; }
+  @media print {
+    .header, .no-print { display: none !important; }
+    .page { max-width: none; padding: 0; }
+    .grid { display: block; }
+    .card {
+      border: none; border-radius: 0;
+      width: 100%; height: 100vh;
+      justify-content: center;
+      padding: 20mm;
+      page-break-after: always; break-after: page;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+    .card:last-child { page-break-after: auto; break-after: auto; }
+    .card-couple { font-size: 13px; letter-spacing: 5px; margin-bottom: 14px; }
+    .card-name { font-size: 54px; margin-bottom: 36px; }
+    .qr { max-width: 130mm; }
+    .card-divider { width: 48px; margin: 36px 0 18px; }
+    .card-scan { font-size: 24px; }
+    .card-brand { font-size: 11px; margin-top: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="header">
+    <div class="logo">BodaLive</div>
+    <h1 class="title">QR por mesa — <em id="coupleTitle">…</em></h1>
+    <div class="subtitle" id="subtitle"></div>
+    <button type="button" class="print-btn no-print" id="printBtn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Imprimir / Descargar PDF
+    </button>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="notice hidden" id="notice">
+    <div class="notice-icon">💍</div>
+    <div id="noticeText"></div>
+  </div>
+</div>
+
+<script>
+  // ---------------- Supabase setup ----------------
+  const SUPABASE_URL = 'https://htqwrnhrvvucahhlvfsc.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0cXdybmhydnZ1Y2FoaGx2ZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTA3NzQsImV4cCI6MjEwNDEyNjc3NH0.VfEPAZx9ynVozFPUu6HAV3k2db4fy7Ye6EvDMKSG3E4'
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  const GUEST_URL = 'https://bodalive.com.ar'
+  const QR_PX = 512
+  const SCAN_TEXT = 'Escaneá para participar en la boda'
+
+  function showNotice(text) {
+    document.getElementById('noticeText').textContent = text
+    document.getElementById('notice').classList.remove('hidden')
+    document.querySelector('.header').classList.add('hidden')
+  }
+
+  function tableUrl(code, tableName) {
+    return `${GUEST_URL}?code=${encodeURIComponent(code)}&mesa=${encodeURIComponent(tableName)}`
+  }
+
+  function renderCards(code, tables, couple) {
+    const grid = document.getElementById('grid')
+    grid.innerHTML = ''
+    tables.forEach(name => {
+      const card = document.createElement('article')
+      card.className = 'card'
+
+      const coupleEl = document.createElement('div')
+      coupleEl.className = 'card-couple'
+      coupleEl.textContent = couple
+
+      const nameEl = document.createElement('div')
+      nameEl.className = 'card-name'
+      nameEl.textContent = name
+
+      const qrEl = document.createElement('div')
+      qrEl.className = 'qr'
+      // La URL va con encodeURIComponent: el QR solo lleva ASCII y qrcode.js
+      // no tiene problemas con tildes o ñ en el nombre de la mesa.
+      new QRCode(qrEl, {
+        text: tableUrl(code, name),
+        width: QR_PX,
+        height: QR_PX,
+        colorDark: '#1A2E28',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M,
+      })
+
+      const divider = document.createElement('div')
+      divider.className = 'card-divider'
+
+      const scanEl = document.createElement('div')
+      scanEl.className = 'card-scan'
+      scanEl.textContent = SCAN_TEXT
+
+      const brandEl = document.createElement('div')
+      brandEl.className = 'card-brand'
+      brandEl.textContent = 'BodaLive'
+
+      card.append(coupleEl, nameEl, qrEl, divider, scanEl, brandEl)
+      grid.appendChild(card)
+    })
+  }
+
+  async function init() {
+    const params = new URLSearchParams(location.search)
+    const code = (params.get('code') || '').trim().toUpperCase()
+    const tables = (params.get('mesas') || '')
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean)
+
+    if (!code) {
+      showNotice('Falta el código de la boda en el link. Abrí esta página desde la app de BodaLive.')
+      return
+    }
+    if (!tables.length) {
+      showNotice('No hay mesas para mostrar. Configuralas desde la app de BodaLive.')
+      return
+    }
+
+    const { data: wedding, error } = await sb.from('weddings')
+      .select('bride_name, groom_name')
+      .eq('invite_code', code)
+      .maybeSingle()
+    if (error || !wedding) {
+      showNotice('No encontramos una boda con el código ' + code + '.')
+      return
+    }
+
+    const couple = [wedding.bride_name, wedding.groom_name].filter(Boolean).join(' & ')
+    document.getElementById('coupleTitle').textContent = couple
+    document.getElementById('subtitle').textContent =
+      `${tables.length} ${tables.length === 1 ? 'mesa' : 'mesas'} · una por hoja al imprimir`
+    document.title = `QR por mesa · ${couple}`
+    renderCards(code, tables, couple)
+  }
+
+  init()
+</script>
+</body>
+</html>
