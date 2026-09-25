@@ -534,6 +534,24 @@
   .boto-clicks { text-align: center; font-size: 16px; font-weight: 600; color: var(--gold); margin-top: 14px; }
   .boto-rank-row { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
 
+  /* Misión fotográfica */
+  .mission-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; background: #fff;
+  }
+  .mission-item.done { background: var(--cream); }
+  .mission-check { font-size: 18px; flex: none; width: 22px; text-align: center; }
+  .mission-text { flex: 1; font-size: 13.5px; color: var(--text); line-height: 1.4; }
+  .mission-item.done .mission-text { text-decoration: line-through; color: var(--text-soft); }
+  .mission-photo-btn {
+    flex: none; border: 1.5px solid var(--border); background: #fff;
+    color: var(--primary); border-radius: 10px; padding: 8px 10px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .mission-photo-btn:disabled { opacity: 0.5; cursor: default; }
+  .mission-section-label { font-size: 11px; letter-spacing: 1px; color: var(--text-soft); text-transform: uppercase; font-weight: 600; margin: 16px 0 8px; }
+
   /* Emojis */
   .emoji-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .emoji-btn {
@@ -777,6 +795,26 @@
             </div>
           </div>
 
+          <!-- Misión fotográfica -->
+          <div class="game-card">
+            <button type="button" class="game-header" onclick="toggleGame('mision')">
+              <div class="game-header-left">
+                <span class="game-icon">📸</span>
+                <div>
+                  <div class="game-title">Misión fotográfica</div>
+                  <div class="game-desc">Completá el checklist de fotos con tu mesa</div>
+                </div>
+              </div>
+              <span class="game-status status-waiting" id="statusMision">⚪ En espera</span>
+            </button>
+            <div class="game-sub-panel" id="gameSubMision">
+              <div class="game-sub-panel-inner">
+                <input type="file" id="missionPhotoInput" accept="image/*" class="hidden" onchange="handleMissionPhotoSelected(event)">
+                <div id="misionContent"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- Emojis para la proyección -->
           <div class="game-card">
             <button type="button" class="game-header" onclick="toggleGame('emojis')">
@@ -868,6 +906,7 @@
       session: null, tableName: '', clicks: 0, secondsLeft: 60,
       ranking: [], syncTimer: null, countdownTimer: null, syncedSessionId: null,
     },
+    mission: { mission: null, items: [], photos: [], pendingItemId: null, uploadingItemId: null },
     emojiCooldownLeft: 0,
     emojiCooldownTimer: null,
   }
@@ -891,9 +930,10 @@
     trivia: 'gameSubTrivia',
     sorteo: 'gameSubSorteo',
     boto: 'gameSubBoto',
+    mision: 'gameSubMision',
     emojis: 'gameSubEmojis',
   }
-  const STATUS_EL_IDS = { trivia: 'statusTrivia', sorteo: 'statusSorteo', boto: 'statusBoto' }
+  const STATUS_EL_IDS = { trivia: 'statusTrivia', sorteo: 'statusSorteo', boto: 'statusBoto', mision: 'statusMision' }
   let activeGame = null
 
   function formatARS(n) {
@@ -997,6 +1037,7 @@
       loadTriviaGame(),
       loadRaffleGame(),
       loadBotoSession(),
+      loadMissionGame(),
     ])
     renderEmojiButtons()
   }
@@ -2090,6 +2131,258 @@
       `
     }
     refreshGameHeight('boto')
+  }
+
+  // ---------------- Actividad: Misión fotográfica ----------------
+  // Cada activación es una misión nueva (INSERT), así que se escucha toda la
+  // tabla de la boda y se recargan consignas/fotos cuando cambia la misión.
+  async function loadMissionGame() {
+    const { data: m } = await sb.from('photo_missions').select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    await setMission(m || null)
+
+    await sb.removeChannel(sb.channel('web-mission-status'))
+    sb.channel('web-mission-status')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'photo_missions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const next = payload.new
+        const current = state.mission.mission
+        if (!next || !next.id) return
+        // Ignora updates de misiones viejas
+        if (current && next.id !== current.id &&
+            new Date(next.created_at) < new Date(current.created_at)) return
+        setMission(next)
+      })
+      .subscribe()
+  }
+
+  async function setMission(m) {
+    const ms = state.mission
+    const changed = (ms.mission && ms.mission.id) !== (m && m.id)
+    const wasActive = !!(ms.mission && ms.mission.status === 'active')
+    ms.mission = m
+    if (changed) {
+      ms.items = []
+      ms.photos = []
+      await sb.removeChannel(sb.channel('web-mission-photos'))
+      if (m) {
+        const [{ data: items }, { data: photos }] = await Promise.all([
+          sb.from('mission_items').select('*').eq('mission_id', m.id),
+          sb.from('mission_photos').select('*').eq('mission_id', m.id),
+        ])
+        ms.items = items || []
+        ms.photos = photos || []
+
+        sb.channel('web-mission-photos')
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'mission_photos',
+            filter: `mission_id=eq.${m.id}`
+          }, (payload) => {
+            if (ms.photos.some(p => p.id === payload.new.id)) return
+            ms.photos = [...ms.photos, payload.new]
+            renderMission()
+          })
+          .subscribe()
+      }
+    } else if (m && m.status === 'active' && !wasActive) {
+      // La misión pasó de inactiva a activa: las consignas pudieron cambiar.
+      const { data: items } = await sb.from('mission_items').select('*').eq('mission_id', m.id)
+      ms.items = items || []
+    }
+    const isActive = !!(m && m.status === 'active')
+    setGameStatus('mision', isActive, isActive ? 'Activa' : (m && m.status === 'closed') ? 'Cerrada' : 'En espera')
+    renderMission()
+  }
+
+  function missionTableKey(table) {
+    return (table || '').trim().toLowerCase()
+  }
+
+  function missionDoneStorageKey(table) {
+    return `bl_mission_done_${state.mission.mission.id}_${missionTableKey(table)}`
+  }
+
+  // Consignas completadas por la mesa: lo guardado en este dispositivo más
+  // lo que ya subieron otros invitados de la misma mesa.
+  function getMissionDoneIds(table) {
+    const done = new Set()
+    if (!table || !state.mission.mission) return done
+    try {
+      JSON.parse(localStorage.getItem(missionDoneStorageKey(table)) || '[]').forEach(id => done.add(id))
+    } catch (e) { /* localStorage corrupto: se ignora */ }
+    const key = missionTableKey(table)
+    state.mission.photos.forEach(p => {
+      if (missionTableKey(p.table_name) === key) done.add(p.item_id)
+    })
+    return done
+  }
+
+  function markMissionItemDone(table, itemId) {
+    const done = getMissionDoneIds(table)
+    done.add(itemId)
+    try {
+      localStorage.setItem(missionDoneStorageKey(table), JSON.stringify([...done]))
+    } catch (e) { /* sin localStorage igual queda en mission_photos */ }
+  }
+
+  function renderMission() {
+    const ms = state.mission
+    const el = document.getElementById('misionContent')
+    const m = ms.mission
+
+    if (!m || m.status !== 'active') {
+      el.innerHTML = `<div class="empty-note">${m && m.status === 'closed'
+        ? 'La misión fotográfica terminó. ¡Gracias por participar! 📸'
+        : 'La misión fotográfica no está activa todavía ⏳'}</div>`
+      refreshGameHeight('mision')
+      return
+    }
+
+    const table = localStorage.getItem('table_name') || ''
+    if (!table) {
+      el.innerHTML = `
+        <div style="font-size:13px;color:var(--text-soft);margin-bottom:10px;">
+          La misión se juega por mesa. ¿En qué mesa estás?
+        </div>
+        <input id="missionTableInput" class="text-input" type="text" placeholder="Ej: Mesa 5, Los primos...">
+        <button type="button" class="btn btn-primary btn-block" style="margin-top:10px;" onclick="handleMissionTableSubmit()">Empezar</button>
+      `
+      refreshGameHeight('mision')
+      return
+    }
+
+    const done = getMissionDoneIds(table)
+    const doneCount = ms.items.filter(i => done.has(i.id)).length
+    const itemsHtml = ms.items.map(item => {
+      const isDone = done.has(item.id)
+      const uploading = ms.uploadingItemId === item.id
+      return `
+        <div class="mission-item ${isDone ? 'done' : ''}">
+          <span class="mission-check">${isDone ? '✅' : '⬜'}</span>
+          <span class="mission-text">${escapeHtml(item.description || '')}</span>
+          <button type="button" class="mission-photo-btn" onclick="handleMissionPhotoClick('${item.id}')"
+            ${ms.uploadingItemId ? 'disabled' : ''}>
+            ${uploading ? 'Subiendo...' : isDone ? '📷 Otra' : '📷 Sacar foto'}
+          </button>
+        </div>
+      `
+    }).join('')
+
+    // Progreso por mesa: consignas distintas completadas
+    const tables = {}
+    ms.photos.forEach(p => {
+      const name = (p.table_name || '').trim()
+      if (!name) return
+      const k = missionTableKey(name)
+      if (!tables[k]) tables[k] = { name, items: new Set() }
+      tables[k].items.add(p.item_id)
+    })
+    const ranking = Object.values(tables).sort((a, b) => b.items.size - a.items.size)
+    const myKey = missionTableKey(table)
+    const rankingHtml = ranking.length
+      ? ranking.map((t, i) => `
+          <div class="boto-rank-row" ${missionTableKey(t.name) === myKey ? 'style="border-color:var(--gold);"' : ''}>
+            <span style="font-size:18px;width:26px;text-align:center;">${MEDALS_WEB[i] || (i + 1) + 'º'}</span>
+            <span style="flex:1;font-size:14px;font-weight:600;color:var(--text);">${escapeHtml(t.name)}</span>
+            <span style="font-size:13px;font-weight:700;color:var(--gold);">${t.items.size}/${ms.items.length}</span>
+          </div>
+        `).join('')
+      : '<div class="empty-note">Todavía ninguna mesa subió fotos</div>'
+
+    el.innerHTML = `
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:12px;">
+        Mesa <b style="color:var(--text);">${escapeHtml(table)}</b> · ${doneCount}/${ms.items.length} consignas
+      </div>
+      <div id="missionUploadStatus" style="font-size:12px;color:var(--text-soft);margin-bottom:8px;min-height:14px;"></div>
+      ${itemsHtml || '<div class="empty-note">Los novios todavía no cargaron consignas</div>'}
+      <div class="mission-section-label">Progreso de las mesas</div>
+      ${rankingHtml}
+    `
+    refreshGameHeight('mision')
+  }
+
+  function handleMissionTableSubmit() {
+    const val = document.getElementById('missionTableInput').value.trim()
+    if (!val) return
+    localStorage.setItem('table_name', val)
+    localStorage.setItem('bl_table_name', val)
+    document.getElementById('bl_table_name').value = val
+    renderMission()
+  }
+
+  function handleMissionPhotoClick(itemId) {
+    if (!requireGuestName()) return
+    state.mission.pendingItemId = itemId
+    document.getElementById('missionPhotoInput').click()
+  }
+
+  function handleMissionPhotoSelected(e) {
+    const file = e.target.files[0]
+    e.target.value = ''
+    const itemId = state.mission.pendingItemId
+    state.mission.pendingItemId = null
+    if (file && itemId) uploadMissionPhoto(file, itemId)
+  }
+
+  async function uploadMissionPhoto(file, itemId) {
+    const ms = state.mission
+    const name = requireGuestName()
+    const table = localStorage.getItem('table_name') || ''
+    if (!name || !table || !ms.mission || ms.mission.status !== 'active') return
+
+    ms.uploadingItemId = itemId
+    renderMission()
+    const setStatus = (txt) => {
+      const statusEl = document.getElementById('missionUploadStatus')
+      if (statusEl) statusEl.textContent = txt
+    }
+    setStatus('Comprimiendo imagen...')
+
+    try {
+      const blob = await compressImage(file, 1080, 0.6)
+      setStatus('Subiendo...')
+
+      const fileName = `${state.weddingId}/mission-${Date.now()}.jpg`
+      const { error: uploadError } = await sb.storage
+        .from('wedding-photos')
+        .upload(fileName, blob, { contentType: 'image/jpeg' })
+      if (uploadError) throw new Error(uploadError.message)
+
+      const { data: urlData } = sb.storage.from('wedding-photos').getPublicUrl(fileName)
+
+      const { data: photo, error: photoError } = await sb.from('photos').insert({
+        wedding_id: state.weddingId,
+        guest_name: name,
+        storage_path: fileName,
+        url: urlData.publicUrl,
+        status: 'approved',
+        likes: 0,
+      }).select().single()
+      if (photoError) throw new Error(photoError.message)
+
+      const { data: mp, error: mpError } = await sb.from('mission_photos').insert({
+        mission_id: ms.mission.id,
+        item_id: itemId,
+        photo_id: photo.id,
+        guest_name: name,
+        table_name: table,
+      }).select().single()
+      if (mpError) throw new Error(mpError.message)
+
+      if (mp && !ms.photos.some(p => p.id === mp.id)) ms.photos = [...ms.photos, mp]
+      markMissionItemDone(table, itemId)
+      ms.uploadingItemId = null
+      renderMission()
+      setStatus('¡Consigna cumplida! ✅')
+    } catch (err) {
+      ms.uploadingItemId = null
+      renderMission()
+      setStatus('Error: ' + err.message)
+    }
+    setTimeout(() => setStatus(''), 3000)
   }
 
   // ---------------- Actividad 5: Emojis para la proyección ----------------
