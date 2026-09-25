@@ -4,20 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Proyección · BodaLive</title>
-<meta name="theme-color" content="#0F1E16">
+<meta name="theme-color" content="#F8F5F0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root {
-    --bg: #0F1E16;
-    --black: #000;
+    --bg: #F8F5F0;
+    --surface: #FFFFFF;
+    --green: #2D4A3E;
+    --green-dark: #1A2E28;
+    --text: #1A2E28;
+    --text-soft: #7A9088;
     --gold: #C9A96E;
-    --green: #2D6A4F;
-    --white-soft: rgba(255,255,255,0.4);
-    --card: rgba(255,255,255,0.05);
-    --line: rgba(255,255,255,0.08);
+    --line: #E8E0D8;
+    --placeholder: #EFEAE2;
+    --placeholder-icon: #CFC6BA;
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     --fade-ms: 500ms;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,131 +29,184 @@
     width: 100%; height: 100%;
     overflow: hidden;
     background: var(--bg);
-    color: #fff;
-    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     cursor: none;
   }
 
-  /* ---------- Modo normal ---------- */
-  #normalLayer {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    transition: opacity var(--fade-ms) ease;
-  }
-  body.moment-on #normalLayer { opacity: 0; }
+  .shell { position: absolute; inset: 0; display: flex; flex-direction: column; }
 
+  /* ---------- Header ---------- */
   .header {
-    flex: none; text-align: center;
-    padding: 18px 24px 14px;
-    margin: 0 24px 20px;
-    border-bottom: 1px solid var(--line);
+    flex: none;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 18px 28px 14px;
   }
+  .logo { font-size: 14px; font-weight: 500; color: var(--green); letter-spacing: 0.2px; }
+  .header-center { text-align: center; }
   .names {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-style: italic; font-size: 28px; font-weight: normal;
-    color: #fff; margin-bottom: 4px;
+    font-size: 18px; font-weight: 400; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--text); white-space: nowrap;
   }
-  .meta { font-size: 12px; color: var(--white-soft); letter-spacing: 0.3px; min-height: 15px; }
-  .meta-sep { margin: 0 8px; }
-  #date:empty + .meta-sep { display: none; }
+  .date { font-size: 11px; color: var(--text-soft); letter-spacing: 2px; margin-top: 4px; min-height: 14px; }
+  .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+  .tagline { font-size: 13px; font-style: italic; color: var(--text-soft); }
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.5px; color: var(--green);
+    border: 1px solid var(--line); background: var(--surface);
+    border-radius: 99px; padding: 4px 10px;
+  }
+  .mode-badge svg { width: 12px; height: 12px; }
 
-  .body { flex: 1; min-height: 0; display: flex; padding: 0 24px 24px; gap: 32px; }
-  .grid-area { flex: 0 0 65%; min-width: 0; position: relative; overflow: hidden; }
-  .sidebar { flex: 1; min-width: 0; overflow: hidden; }
-
-  .grid {
-    position: relative;
+  /* ---------- Mosaico ---------- */
+  .mosaic {
+    flex: 1; min-height: 0;
     display: grid;
-    grid-template-columns: repeat(3, var(--tile, 0px));
-    grid-auto-rows: var(--tile, 0px);
-    gap: 4px;
-    justify-content: center;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-areas:
+      "a c c e"
+      "a c c g"
+      "b d f h";
+    gap: 10px;
+    padding: 0 28px 14px;
   }
-  .tile {
-    position: relative; border-radius: 4px; overflow: hidden;
-    background: var(--black);
-    animation: fadeIn 600ms ease both;
+  .cell { position: relative; overflow: hidden; border-radius: 6px; background: var(--placeholder); min-width: 0; min-height: 0; }
+  .cell-a { grid-area: a; }
+  .cell-b { grid-area: b; }
+  .cell-c { grid-area: c; }
+  .cell-d { grid-area: d; }
+  .cell-e { grid-area: e; }
+  .cell-f { grid-area: f; }
+  .cell-g { grid-area: g; }
+  .cell-h { grid-area: h; }
+
+  /* Placeholder sutil para posiciones sin foto */
+  .placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--placeholder-icon);
   }
-  .tile.no-anim { animation: none; }
-  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .tile-like {
-    position: absolute; top: 6px; right: 6px;
-    background: rgba(0,0,0,0.4); border-radius: 4px;
-    padding: 2px 6px; font-size: 11px; font-weight: 500;
+  .placeholder svg { width: 28px; height: 28px; }
+
+  /* Capas de foto: la nueva entra encima con resorte, la vieja se desvanece */
+  .layer {
+    position: absolute; inset: 0;
+    opacity: 0; transform: scale(0.96);
+    transition: opacity 700ms var(--spring), transform 700ms var(--spring);
   }
-  .tile-name {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4);
-    padding: 4px 8px; font-size: 11px; font-weight: 500;
-    color: rgba(255,255,255,0.9);
+  .layer.in { opacity: 1; transform: scale(1); }
+  .layer.out { opacity: 0; transform: scale(1); transition: opacity 300ms ease; }
+  .layer img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .guest-name {
+    position: absolute; left: 8px; bottom: 8px;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.95);
+    background: rgba(26,46,40,0.4);
+    border-radius: 99px; padding: 3px 8px;
+    max-width: calc(100% - 16px);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .empty { color: var(--white-soft); font-size: 14px; padding: 24px; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  /* Podio y misión */
-  .side-title {
-    font-size: 11px; font-weight: 600; letter-spacing: 3px;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 16px;
+  /* C: foto fija de los novios */
+  .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover-fallback {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+    font-size: 40px; color: var(--green);
   }
-  .podium-card {
-    display: flex; align-items: center; gap: 16px;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
+
+  /* D: frase sobre la foto */
+  .quote {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 16px;
+    background: linear-gradient(to top, rgba(26,46,40,0.45), rgba(26,46,40,0.15));
+    font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+    font-size: 20px; line-height: 1.3; color: #fff;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.3);
   }
-  .podium-medal { font-size: 36px; line-height: 1; flex: none; }
-  .podium-info { min-width: 0; }
-  .podium-name {
-    font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px;
+
+  /* Badge de votos (H y estrella) */
+  .votes-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    border-radius: 99px; padding: 4px 10px;
+  }
+  .cell-h .votes-badge {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    background: rgba(255,255,255,0.92); color: var(--text);
+  }
+
+  /* G: estrella de la noche */
+  .star {
+    background: var(--green-dark); color: #fff;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 20px 22px;
+  }
+  .star-title { font-size: 9px; font-weight: 600; letter-spacing: 2px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+  .star-name {
+    font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+    font-size: 16px; color: #fff; margin-bottom: 4px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .podium-points { font-size: 14px; font-weight: 500; color: var(--gold); }
+  .star-points { font-size: 13px; font-weight: 500; color: var(--gold); margin-bottom: 14px; }
+  .star .votes-badge { align-self: flex-start; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
 
-  #missionBox { margin-top: 28px; }
-  .mission-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .mission-table { flex: 0 0 38%; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .track { flex: 1; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
-  .fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.5s ease; }
-  .mission-count { flex: none; font-size: 12px; font-weight: 600; color: var(--gold); font-variant-numeric: tabular-nums; }
-  .mission-empty { font-size: 13px; color: var(--white-soft); }
+  /* ---------- Footer ---------- */
+  .footer {
+    flex: none;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 10px 28px;
+    font-size: 12px; color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ---------- Foto del momento ---------- */
   #momentLayer {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; z-index: 5;
     display: flex; flex-direction: column; align-items: center;
-    padding: 24px 24px 28px;
-    background: var(--bg);
+    padding: 28px 28px 32px;
+    background: rgba(248,245,240,0.94);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     opacity: 0; pointer-events: none;
     transition: opacity var(--fade-ms) ease;
   }
   body.moment-on #momentLayer { opacity: 1; }
   .moment-eyebrow {
-    font-size: 11px; font-weight: 600; letter-spacing: 3px;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+    font-size: 11px; font-weight: 500; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--text-soft); margin-bottom: 6px;
   }
-  .moment-countdown { font-size: 56px; font-weight: 300; line-height: 1.1; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .moment-countdown {
+    font-size: 56px; font-weight: 300; line-height: 1.1; color: var(--green);
+    margin-bottom: 14px; font-variant-numeric: tabular-nums;
+  }
   .moment-result {
     font-family: Georgia, 'Times New Roman', serif; font-style: italic;
-    font-size: 32px; margin: 12px 0 18px;
+    font-size: 30px; color: var(--text); margin: 12px 0 18px;
   }
   .moment-photo-box {
-    width: 70%; flex: 1; min-height: 0;
-    border-radius: 4px; overflow: hidden; background: var(--black);
+    width: 60%; flex: 1; min-height: 0;
+    border-radius: 6px; overflow: hidden; background: var(--placeholder);
+    box-shadow: 0 20px 60px rgba(26,46,40,0.18);
   }
   .moment-photo-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .moment-bars { width: 70%; margin-top: 20px; }
+  .moment-bars { width: 60%; margin-top: 22px; }
   .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 14px; }
-  .bar-label { flex: 0 0 140px; font-size: 15px; font-weight: 500; }
-  .bar-row .track { height: 10px; }
-  .bar-row .fill { transition: width 0.4s ease; }
+  .bar-label { flex: 0 0 140px; font-size: 14px; font-weight: 500; color: var(--text); }
+  .track { flex: 1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
   .fill-like { background: var(--green); }
-  .fill-meh { background: rgba(255,255,255,0.3); }
-  .bar-value { flex: 0 0 110px; text-align: right; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .moment-total { text-align: center; font-size: 12px; color: var(--white-soft); margin-top: 6px; }
+  .fill-meh { background: #C9C2B8; }
+  .bar-value { flex: 0 0 100px; text-align: right; font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .moment-total { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 6px; }
 
   /* Emojis flotantes */
-  .emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .emoji-layer { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
   .floating-emoji {
     position: absolute; bottom: 40px; font-size: 48px;
     animation: floatUp 3s ease-out forwards;
@@ -162,12 +219,12 @@
 
   /* Mensajes de estado */
   .notice {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; padding: 32px; text-align: center;
-    background: var(--bg); z-index: 10;
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px; text-align: center; background: var(--bg);
   }
-  .notice-icon { font-size: 48px; margin-bottom: 16px; }
-  .notice-text { color: rgba(255,255,255,0.6); font-size: 15px; line-height: 1.5; max-width: 420px; }
+  .notice-icon { font-size: 44px; margin-bottom: 16px; }
+  .notice-text { color: var(--text-soft); font-size: 15px; line-height: 1.5; max-width: 420px; }
   .hidden { display: none !important; }
 
   #rotateNotice { display: none; }
@@ -178,28 +235,55 @@
 </head>
 <body>
 
-<div id="normalLayer">
-  <div class="header">
-    <div class="names" id="names">&nbsp;</div>
-    <div class="meta"><span id="date"></span><span class="meta-sep">·</span><span id="photoCount"></span></div>
-  </div>
-  <div class="body">
-    <div class="grid-area" id="gridArea">
-      <div class="grid" id="grid"></div>
+<div class="shell">
+  <header class="header">
+    <div class="logo">BodaLive</div>
+    <div class="header-center">
+      <div class="names" id="names">&nbsp;</div>
+      <div class="date" id="date"></div>
     </div>
-    <div class="sidebar">
-      <div class="side-title">Estrella de la noche</div>
-      <div id="podium"></div>
-      <div id="missionBox" class="hidden">
-        <div class="side-title">📸 Misión fotográfica</div>
-        <div id="missionList"></div>
-      </div>
+    <div class="header-right">
+      <span class="tagline">Una noche para recordar</span>
+      <span class="mode-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        Modo Proyección
+      </span>
     </div>
-  </div>
+  </header>
+
+  <main class="mosaic">
+    <div class="cell cell-a" data-slot="a"></div>
+    <div class="cell cell-b" data-slot="b"></div>
+    <div class="cell cell-c cover" id="coverCell">
+      <div class="cover-fallback" id="coverFallback"></div>
+    </div>
+    <div class="cell cell-d" data-slot="d">
+      <div class="quote">La vida es mejor juntos</div>
+    </div>
+    <div class="cell cell-e" data-slot="e"></div>
+    <div class="cell cell-f" data-slot="f"></div>
+    <div class="cell cell-g star">
+      <div class="star-title">Estrella de la noche</div>
+      <div class="star-name" id="starName">—</div>
+      <div class="star-points" id="starPoints">Sumá puntos jugando</div>
+      <span class="votes-badge">❤️ <span id="starVotes">0</span> votos</span>
+    </div>
+    <div class="cell cell-h" data-slot="h">
+      <span class="votes-badge hidden" id="slotHVotes"></span>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span id="footerPhotos">📷 0 fotos</span>
+    <span></span>
+    <span id="footerVotes">❤️ 0 votos</span>
+  </footer>
 </div>
 
 <div id="momentLayer">
-  <div class="moment-eyebrow" id="momentEyebrow">Foto del momento · ¡Votá desde tu celular!</div>
+  <div class="moment-eyebrow" id="momentEyebrow">Foto del momento · Votá desde tu celular</div>
   <div class="moment-countdown" id="momentCountdown">15</div>
   <div class="moment-result hidden" id="momentResult"></div>
   <div class="moment-photo-box"><img id="momentPhoto" alt=""></div>
@@ -236,10 +320,12 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0cXdybmhydnZ1Y2FoaGx2ZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTA3NzQsImV4cCI6MjEwNDEyNjc3NH0.VfEPAZx9ynVozFPUu6HAV3k2db4fy7Ye6EvDMKSG3E4'
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
-  const GRID_COLUMNS = 3
-  const GRID_GAP = 4
-  const MAX_PHOTOS = 12
-  const MEDALS = ['🥇', '🥈', '🥉']
+  // Posiciones del mosaico que rotan con fotos de invitados (C es la foto
+  // fija de los novios y G la estrella de la noche).
+  const SLOT_KEYS = ['a', 'b', 'd', 'e', 'f', 'h']
+  const ROTATE_MS = 9000
+  const POOL_SIZE = 80
+  const LEAVE_MS = 300
   const NO_TABLE = 'Sin mesa'
   const MAX_FLOATING_EMOJIS = 3
   const EMOJI_DURATION = 3000
@@ -249,14 +335,23 @@
   const MOMENT_WIN_THRESHOLD = 70
   const MOMENT_WIN_POINTS = 150
 
+  const PLACEHOLDER_HTML = `
+    <div class="placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+      </svg>
+    </div>`
+
   const state = {
     weddingId: null,
-    photos: [],
-    totalCount: 0,
+    // Fotos aprobadas recientes para rotar, y likes de todas para el total
+    pool: [],
+    poolCursor: 0,
+    likesById: {},
+    totalPhotos: 0,
+    slots: [],
+    rotateTimer: null,
     pointsRows: [],
-    mission: null,
-    missionItemsCount: 0,
-    missionPhotos: [],
     moment: null,
     momentPhoto: null,
     momentVotes: { likes: 0, mehs: 0 },
@@ -269,6 +364,10 @@
     return String(str ?? '')
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  }
+
+  function formatNumber(n) {
+    return Number(n || 0).toLocaleString('es-AR')
   }
 
   function showError(text) {
@@ -291,32 +390,141 @@
       return
     }
     state.weddingId = wedding.id
+    renderHeader(wedding)
+    renderCover(wedding)
 
-    document.getElementById('names').textContent =
-      `${wedding.bride_name || ''} & ${wedding.groom_name || ''}`
-    if (wedding.date) {
-      const formatted = new Date(wedding.date + 'T00:00:00-03:00').toLocaleDateString('es-AR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      })
-      document.getElementById('date').textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1)
-    }
-
-    await Promise.all([loadPhotos(), loadPoints(), loadMission(), loadMoment()])
+    await Promise.all([loadPhotos(), loadPoints(), loadMoment()])
     subscribeEmojis()
   }
 
-  // ---------------- Grid de fotos ----------------
+  function renderHeader(wedding) {
+    document.getElementById('names').textContent =
+      `${wedding.bride_name || ''} & ${wedding.groom_name || ''}`.toUpperCase()
+    // "2026-09-25" → "25 · 09 · 2026"
+    const parts = (wedding.date || '').split('-')
+    if (parts.length === 3) {
+      document.getElementById('date').textContent = `${parts[2]} · ${parts[1]} · ${parts[0]}`
+    }
+  }
+
+  function renderCover(wedding) {
+    const cell = document.getElementById('coverCell')
+    if (wedding.cover_photo_url) {
+      cell.innerHTML = `<img src="${escapeHtml(wedding.cover_photo_url)}" alt="">`
+    } else {
+      document.getElementById('coverFallback').textContent =
+        `${wedding.bride_name || ''} & ${wedding.groom_name || ''}`
+    }
+  }
+
+  // ---------------- Mosaico ----------------
+  function initSlots() {
+    state.slots = SLOT_KEYS.map(key => {
+      const el = document.querySelector(`[data-slot="${key}"]`)
+      el.insertAdjacentHTML('afterbegin', PLACEHOLDER_HTML)
+      return { key, el, photo: null, updatedAt: 0 }
+    })
+  }
+
+  // Posición a reemplazar: una vacía si hay, si no la que lleva más tiempo sin cambiar
+  function pickSlot() {
+    const empty = state.slots.find(s => !s.photo)
+    if (empty) return empty
+    return state.slots.reduce((oldest, s) => s.updatedAt < oldest.updatedAt ? s : oldest)
+  }
+
+  function isOnScreen(photoId) {
+    return state.slots.some(s => s.photo && s.photo.id === photoId)
+  }
+
+  function showInSlot(slot, photo, animate) {
+    slot.photo = photo
+    slot.updatedAt = Date.now()
+
+    const layer = document.createElement('div')
+    layer.className = 'layer'
+    layer.innerHTML = `
+      <img src="${escapeHtml(photo.url)}" alt="">
+      ${photo.guest_name ? `<div class="guest-name">${escapeHtml(photo.guest_name)}</div>` : ''}
+    `
+    const previous = [...slot.el.querySelectorAll('.layer, .placeholder')]
+    // La nueva capa va encima de las anteriores pero debajo de los overlays fijos
+    const firstOverlay = slot.el.querySelector('.quote, .votes-badge')
+    slot.el.insertBefore(layer, firstOverlay)
+
+    const reveal = () => {
+      // Forzar reflow para que la transición arranque desde scale(0.96)
+      void layer.offsetWidth
+      layer.classList.add('in')
+      previous.forEach(old => {
+        old.classList.add('out')
+        setTimeout(() => old.remove(), LEAVE_MS)
+      })
+      if (slot.key === 'h') renderSlotHVotes()
+    }
+
+    if (!animate) {
+      layer.classList.add('in')
+      layer.style.transition = 'none'
+      previous.forEach(old => old.remove())
+      requestAnimationFrame(() => { layer.style.transition = '' })
+      if (slot.key === 'h') renderSlotHVotes()
+      return
+    }
+    // Se espera a que la imagen cargue para que no entre un cuadro vacío
+    const img = layer.querySelector('img')
+    if (img.complete) reveal()
+    else {
+      img.addEventListener('load', reveal, { once: true })
+      img.addEventListener('error', reveal, { once: true })
+    }
+  }
+
+  function renderSlotHVotes() {
+    const slot = state.slots.find(s => s.key === 'h')
+    const badge = document.getElementById('slotHVotes')
+    if (!slot || !slot.photo) { badge.classList.add('hidden'); return }
+    const likes = state.likesById[slot.photo.id] || 0
+    badge.textContent = `❤️ ${formatNumber(likes)} ${likes === 1 ? 'voto' : 'votos'}`
+    badge.classList.remove('hidden')
+  }
+
+  // Rotación suave: la posición más vieja pasa a la siguiente foto que no esté en pantalla
+  function rotateNext() {
+    if (document.body.classList.contains('moment-on')) return
+    const { pool } = state
+    if (pool.length <= state.slots.filter(s => s.photo).length) return
+    for (let i = 0; i < pool.length; i++) {
+      const photo = pool[(state.poolCursor + i) % pool.length]
+      if (isOnScreen(photo.id)) continue
+      state.poolCursor = (state.poolCursor + i + 1) % pool.length
+      showInSlot(pickSlot(), photo, true)
+      return
+    }
+  }
+
   async function loadPhotos() {
-    const { data, count } = await sb.from('photos')
-      .select('*', { count: 'exact' })
-      .eq('wedding_id', state.weddingId)
-      .eq('status', 'approved')
-      .order('likes', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(MAX_PHOTOS)
-    state.photos = data || []
-    state.totalCount = typeof count === 'number' ? count : state.photos.length
-    renderGrid(null)
+    const [{ data: recent }, { data: all }] = await Promise.all([
+      sb.from('photos').select('*')
+        .eq('wedding_id', state.weddingId).eq('status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(POOL_SIZE),
+      sb.from('photos').select('id, likes')
+        .eq('wedding_id', state.weddingId).eq('status', 'approved'),
+    ])
+    state.pool = recent || []
+    ;(all || []).forEach(p => { state.likesById[p.id] = p.likes || 0 })
+    state.totalPhotos = (all || []).length
+    renderFooter()
+
+    state.pool.slice(0, state.slots.length).forEach((photo, i) => {
+      showInSlot(state.slots[i], photo, false)
+      // Escalonado: la primera posición es la primera en rotar
+      state.slots[i].updatedAt = Date.now() - (state.slots.length - i) * 1000
+    })
+    state.poolCursor = Math.min(state.pool.length, state.slots.length) % Math.max(state.pool.length, 1)
+    clearInterval(state.rotateTimer)
+    state.rotateTimer = setInterval(rotateNext, ROTATE_MS)
 
     await sb.removeChannel(sb.channel('projection-web-photos'))
     sb.channel('projection-web-photos')
@@ -325,51 +533,47 @@
         filter: `wedding_id=eq.${state.weddingId}`
       }, (payload) => {
         const photo = payload.new
-        if (photo.status !== 'approved') return
-        if (state.photos.some(p => p.id === photo.id)) return
-        state.photos = [photo, ...state.photos].slice(0, MAX_PHOTOS)
-        state.totalCount += 1
-        renderGrid(photo.id)
+        if (photo.status !== 'approved' || photo.id in state.likesById) return
+        state.likesById[photo.id] = photo.likes || 0
+        state.totalPhotos += 1
+        state.pool = [photo, ...state.pool].slice(0, POOL_SIZE)
+        renderFooter()
+        showInSlot(pickSlot(), photo, true)
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'photos',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const photo = payload.new
+        if (!(photo.id in state.likesById)) return
+        state.likesById[photo.id] = photo.likes || 0
+        renderFooter()
+        renderSlotHVotes()
       })
       .subscribe()
   }
 
-  // Solo la foto nueva entra con fade-in; el resto se re-renderiza sin animar
-  function renderGrid(newPhotoId) {
-    const n = state.totalCount
-    document.getElementById('photoCount').textContent = `${n} foto${n === 1 ? '' : 's'} de la noche`
-
-    const grid = document.getElementById('grid')
-    if (!state.photos.length) {
-      grid.innerHTML = '<div class="empty" style="grid-column:1 / -1;">Todavía no hay fotos. ¡Sacá la primera!</div>'
-      return
-    }
-    grid.innerHTML = state.photos.map(p => `
-      <div class="tile ${p.id === newPhotoId ? '' : 'no-anim'}">
-        <img src="${escapeHtml(p.url)}" alt="">
-        ${p.likes > 0 ? `<div class="tile-like">❤️ ${p.likes}</div>` : ''}
-        <div class="tile-name">${escapeHtml(p.guest_name || '')}</div>
-      </div>
-    `).join('')
+  function totalVotes() {
+    return Object.values(state.likesById).reduce((sum, n) => sum + n, 0)
   }
 
-  // Tamaño de cada foto: entra el grid entero (3x4) sin scroll
-  function sizeGrid() {
-    const area = document.getElementById('gridArea')
-    const rows = Math.ceil(MAX_PHOTOS / GRID_COLUMNS)
-    const byWidth = (area.clientWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS
-    const byHeight = (area.clientHeight - GRID_GAP * (rows - 1)) / rows
-    const tile = Math.max(0, Math.floor(Math.min(byWidth, byHeight)))
-    document.getElementById('grid').style.setProperty('--tile', tile + 'px')
+  function renderFooter() {
+    const photos = state.totalPhotos
+    const votes = totalVotes()
+    document.getElementById('footerPhotos').textContent =
+      `📷 ${formatNumber(photos)} ${photos === 1 ? 'foto' : 'fotos'}`
+    document.getElementById('footerVotes').textContent =
+      `❤️ ${formatNumber(votes)} ${votes === 1 ? 'voto' : 'votos'}`
+    document.getElementById('starVotes').textContent = formatNumber(votes)
   }
 
-  // ---------------- Podio por mesa ----------------
+  // ---------------- Estrella de la noche (top 1 por mesa) ----------------
   async function loadPoints() {
     const { data } = await sb.from('points')
       .select('guest_name, table_name, points')
       .eq('wedding_id', state.weddingId)
     state.pointsRows = data || []
-    renderPodium()
+    renderStar()
 
     await sb.removeChannel(sb.channel('projection-web-points'))
     sb.channel('projection-web-points')
@@ -383,7 +587,7 @@
           table_name: row.table_name ?? null,
           points: row.points,
         })
-        renderPodium()
+        renderStar()
       })
       .subscribe()
   }
@@ -394,7 +598,7 @@
     return 'Mesa ' + name
   }
 
-  function renderPodium() {
+  function renderStar() {
     const totals = {}
     state.pointsRows.forEach(row => {
       const name = (row.table_name || '').trim() || NO_TABLE
@@ -402,101 +606,10 @@
       if (!totals[key]) totals[key] = { name, points: 0 }
       totals[key].points += row.points || 0
     })
-    const top = Object.values(totals).sort((a, b) => b.points - a.points).slice(0, 3)
-    document.getElementById('podium').innerHTML = MEDALS.map((medal, i) => {
-      const entry = top[i]
-      return `
-        <div class="podium-card">
-          <div class="podium-medal">${medal}</div>
-          <div class="podium-info">
-            <div class="podium-name">${entry ? escapeHtml(tableLabel(entry.name)) : '—'}</div>
-            <div class="podium-points">${entry ? entry.points + ' pts' : '—'}</div>
-          </div>
-        </div>
-      `
-    }).join('')
-  }
-
-  // ---------------- Misión fotográfica ----------------
-  async function loadMission() {
-    const { data: m } = await sb.from('photo_missions').select('*')
-      .eq('wedding_id', state.weddingId)
-      .order('created_at', { ascending: false }).limit(1).maybeSingle()
-    await setMission(m || null)
-
-    await sb.removeChannel(sb.channel('projection-web-missions'))
-    sb.channel('projection-web-missions')
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'photo_missions',
-        filter: `wedding_id=eq.${state.weddingId}`
-      }, (payload) => {
-        const next = payload.new
-        const current = state.mission
-        if (!next || !next.id) return
-        if (current && next.id !== current.id &&
-            new Date(next.created_at) < new Date(current.created_at)) return
-        setMission(next)
-      })
-      .subscribe()
-  }
-
-  async function setMission(m) {
-    const changed = (state.mission && state.mission.id) !== (m && m.id)
-    const wasActive = !!(state.mission && state.mission.status === 'active')
-    state.mission = m
-
-    if (m && (changed || (m.status === 'active' && !wasActive))) {
-      const [{ count }, { data: photos }] = await Promise.all([
-        sb.from('mission_items').select('id', { count: 'exact', head: true }).eq('mission_id', m.id),
-        sb.from('mission_photos').select('item_id, table_name').eq('mission_id', m.id),
-      ])
-      state.missionItemsCount = count || 0
-      state.missionPhotos = photos || []
-    }
-
-    if (changed) {
-      await sb.removeChannel(sb.channel('projection-web-mission-photos'))
-      if (m) {
-        sb.channel('projection-web-mission-photos')
-          .on('postgres_changes', {
-            event: 'INSERT', schema: 'public', table: 'mission_photos',
-            filter: `mission_id=eq.${m.id}`
-          }, (payload) => {
-            state.missionPhotos.push(payload.new)
-            renderMission()
-          })
-          .subscribe()
-      }
-    }
-    renderMission()
-  }
-
-  // Progreso por mesa: consignas distintas cumplidas sobre el total
-  function renderMission() {
-    const box = document.getElementById('missionBox')
-    const m = state.mission
-    if (!m || m.status !== 'active') { box.classList.add('hidden'); return }
-    box.classList.remove('hidden')
-
-    const tables = {}
-    state.missionPhotos.forEach(p => {
-      const name = (p.table_name || '').trim()
-      if (!name) return
-      const key = name.toLowerCase()
-      if (!tables[key]) tables[key] = { name, items: new Set() }
-      tables[key].items.add(p.item_id)
-    })
-    const ranking = Object.values(tables).sort((a, b) => b.items.size - a.items.size).slice(0, 5)
-    const total = state.missionItemsCount || 1
-    document.getElementById('missionList').innerHTML = ranking.length
-      ? ranking.map(t => `
-          <div class="mission-row">
-            <span class="mission-table">${escapeHtml(tableLabel(t.name))}</span>
-            <div class="track"><div class="fill" style="width:${Math.min(100, Math.round(t.items.size / total * 100))}%;"></div></div>
-            <span class="mission-count">${t.items.size}/${state.missionItemsCount}</span>
-          </div>
-        `).join('')
-      : '<div class="mission-empty">¡Arrancó la misión! Todavía ninguna mesa subió fotos</div>'
+    const top = Object.values(totals).sort((a, b) => b.points - a.points)[0]
+    document.getElementById('starName').textContent = top ? tableLabel(top.name) : '—'
+    document.getElementById('starPoints').textContent =
+      top ? `${formatNumber(top.points)} pts` : 'Sumá puntos jugando'
   }
 
   // ---------------- Foto del momento ----------------
@@ -561,7 +674,7 @@
       return
     }
 
-    // Terminó la sesión que se está mostrando: resultado 5s y vuelta al modo normal
+    // Terminó la sesión que se está mostrando: resultado 5s y vuelta al mosaico
     if (sess.status === 'ended' && current && current.id === sess.id) {
       state.moment = sess
       clearInterval(state.momentTimer)
@@ -619,7 +732,7 @@
       (won ? `  ·  ¡+${MOMENT_WIN_POINTS} pts para ${author}!` : '')
 
     document.getElementById('momentEyebrow').textContent =
-      ended ? 'Resultado final' : 'Foto del momento · ¡Votá desde tu celular!'
+      ended ? 'Resultado final' : 'Foto del momento · Votá desde tu celular'
     document.getElementById('momentCountdown').classList.toggle('hidden', ended)
     const result = document.getElementById('momentResult')
     result.classList.toggle('hidden', !ended)
@@ -652,9 +765,8 @@
   }
 
   // ---------------- Arranque ----------------
-  window.addEventListener('resize', sizeGrid)
-  sizeGrid()
-  init().then(sizeGrid)
+  initSlots()
+  init()
 </script>
 </body>
 </html>
