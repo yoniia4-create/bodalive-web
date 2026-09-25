@@ -693,6 +693,12 @@
             <label class="field-label" for="gamesGuestName">Tu nombre (para jugar)</label>
             <input id="gamesGuestName" class="text-input" type="text"
               placeholder="Tu nombre" oninput="onGamesGuestNameChange()">
+            <div style="margin-top: 8px;">
+              <label for="bl_table_name" style="font-size: 9px; color: #7A9088; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">NOMBRE DE TU MESA (OPCIONAL)</label>
+              <input type="text" id="bl_table_name" placeholder="Ej: Mesa 5, Los primos..."
+                oninput="saveSharedTableName()"
+                style="width: 100%; border: 0.5px solid #E8E0D8; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #1A2E28; background: #FDFAF6; box-sizing: border-box;">
+            </div>
           </div>
 
           <!-- Mural de fotos -->
@@ -969,6 +975,7 @@
     document.getElementById('mpAlias').textContent = state.wedding.mp_alias || 'Consultar con los novios'
     document.getElementById('modalAliasNote').textContent = state.wedding.mp_alias || 'Consultar con los novios'
     document.getElementById('gamesGuestName').value = getSavedGuestName()
+    document.getElementById('bl_table_name').value = localStorage.getItem('table_name') || ''
 
     if (state.wedding.date) {
       const d = new Date(state.wedding.date + 'T00:00:00-03:00')
@@ -1121,6 +1128,16 @@
   function onGamesGuestNameChange() {
     const val = document.getElementById('gamesGuestName').value.trim()
     localStorage.setItem('bl_guest_name', val)
+    saveSharedTableName()
+  }
+
+  // Mesa opcional del campo compartido: se guarda junto con el nombre.
+  // Vacía no pisa la mesa que el invitado haya cargado en otro juego.
+  function saveSharedTableName() {
+    const val = document.getElementById('bl_table_name').value.trim()
+    if (!val) return
+    localStorage.setItem('table_name', val)
+    localStorage.setItem('bl_table_name', val)
   }
 
   function requireGuestName() {
@@ -1130,6 +1147,7 @@
       return null
     }
     localStorage.setItem('bl_guest_name', val)
+    saveSharedTableName()
     return val
   }
 
