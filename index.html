@@ -853,7 +853,10 @@
     activeGiftItem: null,
     photos: [],
     likedPhotoIds: new Set(),
-    trivia: { game: null, questions: [], answered: false, selectedIndex: null },
+    trivia: { game: null, questions: [], answered: false, selectedIndex: null,
+      joined: false, guestName: '', tableName: '',
+      waitingNext: false, lastCorrect: false, feedbackTimer: null,
+      currentQuestion: null, podium: null },
     raffleGame: { raffle: null, poll: null, entries: [], votes: [], hasEntered: false, hasVoted: false },
     boto: {
       session: null, tableName: '', clicks: 0, secondsLeft: 60,
@@ -1474,6 +1477,10 @@
   }
 
   // ---------------- Actividad 2: Trivia ----------------
+  // Tiempo que se muestra el acierto/error antes de pasar a la espera.
+  const TRIVIA_FEEDBACK_MS = 3000
+  const TRIVIA_MEDALS = ['🥇', '🥈', '🥉']
+
   async function loadTriviaGame() {
     const t = state.trivia
     const { data: g } = await sb.from('trivia_games')
@@ -1484,6 +1491,7 @@
       .maybeSingle()
 
     t.game = g || null
+    t.currentQuestion = g ? g.current_question : null
 
     if (g) {
       const { data: q } = await sb.from('trivia_questions')
@@ -1498,23 +1506,96 @@
           event: 'UPDATE', schema: 'public', table: 'trivia_games',
           filter: `id=eq.${g.id}`
         }, (payload) => {
-          t.game = payload.new
-          t.answered = false
-          t.selectedIndex = null
+          const updated = payload.new
+          // Pausar/reanudar también dispara UPDATE: la respuesta solo se
+          // resetea cuando el novio cambia de pregunta.
+          if (updated.current_question !== t.currentQuestion) {
+            resetTriviaAnswer()
+          }
+          t.currentQuestion = updated.current_question
+          const justFinished = updated.status === 'finished'
+            && (!t.game || t.game.status !== 'finished')
+          t.game = updated
           setGameStatus('trivia', t.game.status === 'active', triviaStatusLabel(t.game.status))
+          if (justFinished) loadTriviaPodium()
           renderTrivia()
         })
         .subscribe()
+
+      if (g.status === 'finished') loadTriviaPodium()
     }
 
     setGameStatus('trivia', g && g.status === 'active', triviaStatusLabel(g ? g.status : null))
     renderTrivia()
   }
 
+  function resetTriviaAnswer() {
+    const t = state.trivia
+    if (t.feedbackTimer) clearTimeout(t.feedbackTimer)
+    t.feedbackTimer = null
+    t.answered = false
+    t.selectedIndex = null
+    t.waitingNext = false
+  }
+
+  // Top 3 de mesas: suma los puntos de la boda por table_name ("mesa 5" y
+  // "Mesa 5" cuentan como la misma; sin mesa se agrupa como "Sin mesa").
+  async function loadTriviaPodium() {
+    const t = state.trivia
+    t.podium = null
+    renderTrivia()
+    const { data } = await sb.from('points')
+      .select('table_name, points')
+      .eq('wedding_id', state.weddingId)
+    const totals = {}
+    ;(data || []).forEach(row => {
+      const name = (row.table_name || '').trim() || 'Sin mesa'
+      const key = name.toLowerCase()
+      if (!totals[key]) totals[key] = { name, points: 0 }
+      totals[key].points += row.points || 0
+    })
+    t.podium = Object.values(totals).sort((a, b) => b.points - a.points)
+    renderTrivia()
+  }
+
   function triviaStatusLabel(status) {
     if (status === 'active') return 'Activo'
+    if (status === 'paused') return 'En pausa'
     if (status === 'finished') return 'Terminado'
     return 'En espera'
+  }
+
+  function renderTriviaPodium() {
+    const t = state.trivia
+    if (!t.podium) {
+      return '<div class="empty-note">Calculando el podio...</div>'
+    }
+    if (t.podium.length === 0) {
+      return '<div class="empty-note">🏆 ¡Terminó la trivia! Ninguna mesa sumó puntos esta vez.</div>'
+    }
+    const myKey = (t.tableName || localStorage.getItem('table_name') || '').trim().toLowerCase()
+    const rows = t.podium.slice(0, 3).map((entry, i) => {
+      const mine = myKey && entry.name.toLowerCase() === myKey
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:8px;
+          border-radius:12px;background:#fff;border:${mine ? '2px solid var(--gold)' : '1px solid #E8E1D5'};">
+          <span style="font-size:22px;width:28px;">${TRIVIA_MEDALS[i]}</span>
+          <span style="flex:1;font-size:15px;font-weight:600;">${escapeHtml(entry.name)}</span>
+          <span style="font-size:15px;font-weight:700;color:var(--gold);">${entry.points} pts</span>
+        </div>`
+    }).join('')
+    const myPos = myKey ? t.podium.findIndex(e => e.name.toLowerCase() === myKey) : -1
+    const myLine = myPos >= 3
+      ? `<div style="font-size:12px;color:var(--text-soft);text-align:center;margin-top:4px;">
+          ${escapeHtml(t.podium[myPos].name)} quedó en el puesto ${myPos + 1} con ${t.podium[myPos].points} pts
+        </div>`
+      : ''
+    return `
+      <div style="text-align:center;font-size:15px;font-weight:600;margin-bottom:12px;">
+        🏆 ¡Terminó la trivia! Podio de mesas
+      </div>
+      ${rows}
+      ${myLine}`
   }
 
   function renderTrivia() {
@@ -1528,14 +1609,54 @@
       return
     }
 
+    // La trivia se juega por mesa: antes de jugar se pide nombre y mesa,
+    // precargados si ya se ingresaron antes.
+    if (!t.joined && g.status !== 'finished') {
+      const savedName = localStorage.getItem('guest_name') || getSavedGuestName()
+      const savedTable = localStorage.getItem('table_name')
+        || sessionStorage.getItem('bl_table_name') || ''
+      container.innerHTML = `
+        <div style="font-size:13px;color:var(--text-soft);margin-bottom:12px;">
+          Se juega por mesa: cada respuesta correcta suma para tu equipo.
+        </div>
+        <label class="field-label" for="triviaGuestName">Tu nombre</label>
+        <input id="triviaGuestName" class="text-input" type="text"
+          placeholder="Tu nombre" value="${escapeHtml(savedName).replace(/"/g, '&quot;')}" style="margin-bottom:10px;">
+        <label class="field-label" for="triviaTableName">Nombre de tu mesa</label>
+        <input id="triviaTableName" class="text-input" type="text"
+          placeholder='Ej: "Mesa 5", "Los primos"' value="${escapeHtml(savedTable).replace(/"/g, '&quot;')}"
+          style="margin-bottom:12px;">
+        <button type="button" class="btn btn-primary btn-block" onclick="joinTrivia()">
+          Participar
+        </button>
+      `
+      refreshGameHeight('trivia')
+      return
+    }
+
     if (g.status === 'waiting') {
       container.innerHTML = '<div class="empty-note">🎯 El juego va a empezar pronto. Esperá que los novios lo inicien.</div>'
+    } else if (g.status === 'paused') {
+      container.innerHTML = `
+        <div class="empty-note">
+          ⏸ Trivia en pausa<br>
+          <span style="font-size:12px;">Los novios la retoman en un momento.</span>
+        </div>`
     } else if (g.status === 'finished') {
-      container.innerHTML = '<div class="empty-note">🏆 ¡Terminó la trivia! Revisá el podio en la pantalla del salón.</div>'
+      container.innerHTML = renderTriviaPodium()
     } else if (g.status === 'active') {
       const q = t.questions[g.current_question]
+      const isLast = (g.current_question || 0) + 1 >= t.questions.length
       if (!q) {
         container.innerHTML = '<div class="empty-note">Esperando la próxima pregunta...</div>'
+      } else if (t.waitingNext) {
+        container.innerHTML = `
+          <div class="empty-note">
+            <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:${t.lastCorrect ? '#2D4A3E' : '#9B5E5E'}">
+              ${t.lastCorrect ? '🌟 ¡Sumaste para tu mesa!' : 'Esta vez no'}
+            </div>
+            ${isLast ? 'Esperando los resultados...' : 'Esperando la siguiente pregunta...'}
+          </div>`
       } else {
         const opts = (q.options || []).map((opt, i) => {
           let cls = 'trivia-opt'
@@ -1547,8 +1668,8 @@
         }).join('')
 
         const feedback = t.answered ? `
-          <div class="trivia-feedback" style="color:${t.selectedIndex === q.correct_index ? '#2D4A3E' : '#9B5E5E'}">
-            ${t.selectedIndex === q.correct_index ? '¡Correcto! 🌟' : 'Incorrecto — esperá la siguiente pregunta'}
+          <div class="trivia-feedback" style="color:${t.lastCorrect ? '#2D4A3E' : '#9B5E5E'}">
+            ${t.lastCorrect ? '¡Correcto! 🌟' : 'Incorrecto'}
           </div>` : ''
 
         container.innerHTML = `
@@ -1564,11 +1685,26 @@
     refreshGameHeight('trivia')
   }
 
+  function joinTrivia() {
+    const name = document.getElementById('triviaGuestName').value.trim()
+    const table = document.getElementById('triviaTableName').value.trim()
+    if (!name) { alert('Ingresá tu nombre'); return }
+    if (!table) { alert('Ingresá el nombre de tu mesa'); return }
+
+    const t = state.trivia
+    t.guestName = name
+    t.tableName = table
+    t.joined = true
+    localStorage.setItem('guest_name', name)
+    localStorage.setItem('bl_guest_name', name)
+    localStorage.setItem('table_name', table)
+    renderTrivia()
+  }
+
   async function handleTriviaAnswer(idx) {
     const t = state.trivia
-    if (t.answered || !t.game || t.game.status !== 'active') return
-    const name = requireGuestName()
-    if (!name) return
+    if (!t.joined || t.answered || !t.game || t.game.status !== 'active') return
+    const name = t.guestName
 
     const q = t.questions[t.game.current_question]
     if (!q) return
@@ -1576,7 +1712,16 @@
     t.selectedIndex = idx
     t.answered = true
     const isCorrect = idx === q.correct_index
+    t.lastCorrect = isCorrect
     renderTrivia()
+
+    // 3 s de verde/rojo y después la espera hasta que el novio avance.
+    if (t.feedbackTimer) clearTimeout(t.feedbackTimer)
+    t.feedbackTimer = setTimeout(() => {
+      t.feedbackTimer = null
+      t.waitingNext = true
+      renderTrivia()
+    }, TRIVIA_FEEDBACK_MS)
 
     await sb.from('trivia_answers').insert({
       game_id: t.game.id,
@@ -1585,6 +1730,19 @@
       selected_index: idx,
       is_correct: isCorrect,
     })
+
+    // Mismos puntos que la app (lib/points.ts): suman al podio por mesas.
+    if (isCorrect) {
+      try {
+        await sb.from('points').insert({
+          wedding_id: state.weddingId,
+          guest_name: name,
+          action: 'trivia_correct',
+          points: 200,
+          table_name: t.tableName,
+        })
+      } catch (e) {}
+    }
   }
 
   // ---------------- Actividad 3: Sorteo y votaciones ----------------
