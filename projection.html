@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Proyección · BodaLive</title>
+<meta name="theme-color" content="#1A2E28">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root {
+    --bg: #1A2E28;
+    --bg-deep: #0F1F1A;
+    --gold: #C9A96E;
+    --white-soft: rgba(255,255,255,0.6);
+    --line: rgba(255,255,255,0.12);
+    --fade-ms: 500ms;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    cursor: none;
+  }
+
+  /* ---------- Modo normal ---------- */
+  #normalLayer {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    transition: opacity var(--fade-ms) ease;
+  }
+  body.moment-on #normalLayer { opacity: 0; }
+
+  .header { padding: 28px 24px 18px; text-align: center; flex: none; }
+  .names {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic; font-size: 36px; color: #fff; margin-bottom: 6px;
+  }
+  .date { font-size: 14px; color: var(--white-soft); margin-bottom: 4px; min-height: 17px; }
+  .photo-count { font-size: 13px; color: var(--gold); font-weight: 600; letter-spacing: 0.5px; }
+
+  .body { flex: 1; min-height: 0; display: flex; padding: 0 24px 24px; gap: 24px; }
+  .grid-area { flex: 0 0 65%; min-width: 0; position: relative; overflow: hidden; }
+  .sidebar { flex: 1; min-width: 0; overflow: hidden; padding-top: 4px; }
+
+  .grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, var(--tile, 0px));
+    grid-auto-rows: var(--tile, 0px);
+    gap: 12px;
+    justify-content: center;
+  }
+  .tile {
+    position: relative; border-radius: 12px; overflow: hidden;
+    background: var(--bg-deep);
+    animation: fadeIn 600ms ease both;
+  }
+  .tile.no-anim { animation: none; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile-like {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.55); border-radius: 20px;
+    padding: 4px 8px; font-size: 12px; font-weight: 600;
+  }
+  .tile-name {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 10px; font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .empty { color: rgba(255,255,255,0.5); font-size: 14px; padding: 24px; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Lluvia de miniaturas */
+  .rain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .rain img {
+    position: absolute; top: 0;
+    width: 60px; height: 60px; border-radius: 8px; object-fit: cover;
+    opacity: 0.12;
+    transform: translateY(-60px);
+    animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
+  }
+  @keyframes fall {
+    from { transform: translateY(-60px); }
+    to { transform: translateY(calc(100vh + 60px)); }
+  }
+
+  /* Podio y misión */
+  .side-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+  }
+  .podium-card {
+    border: 1px solid var(--line); background: rgba(255,255,255,0.03);
+    border-radius: 14px; padding: 12px; margin-bottom: 12px; text-align: center;
+  }
+  .podium-medal { font-size: 26px; margin-bottom: 4px; }
+  .podium-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .podium-points { font-size: 13px; font-weight: 700; color: var(--gold); }
+
+  #missionBox { margin-top: 22px; }
+  .mission-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .mission-table { flex: 0 0 38%; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; background: var(--gold); transition: width 0.5s ease; }
+  .mission-count { flex: none; font-size: 12px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .mission-empty { font-size: 13px; color: var(--white-soft); }
+
+  /* ---------- Foto del momento ---------- */
+  #momentLayer {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 24px 24px;
+    background: var(--bg);
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--fade-ms) ease;
+  }
+  body.moment-on #momentLayer { opacity: 1; }
+  .moment-eyebrow {
+    font-size: 14px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 4px;
+  }
+  .moment-countdown { font-size: 64px; font-weight: 700; line-height: 1.1; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+  .moment-result {
+    font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+    font-size: 36px; margin: 14px 0 18px;
+  }
+  .moment-photo-box {
+    width: 70%; flex: 1; min-height: 0;
+    border-radius: 16px; overflow: hidden; background: var(--bg-deep);
+  }
+  .moment-photo-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .moment-bars { width: 70%; margin-top: 18px; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: 12px; }
+  .bar-label { flex: 0 0 150px; font-size: 16px; font-weight: 600; }
+  .bar-row .track { height: 18px; }
+  .bar-row .fill { transition: width 0.4s ease; }
+  .bar-value { flex: 0 0 110px; text-align: right; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .moment-total { text-align: center; font-size: 14px; color: var(--white-soft); margin-top: 4px; }
+
+  /* Emojis flotantes */
+  .emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .floating-emoji {
+    position: absolute; bottom: 40px; font-size: 48px;
+    animation: floatUp 3s ease-out forwards;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translateY(-60vh); opacity: 0; }
+  }
+
+  /* Mensajes de estado */
+  .notice {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px; text-align: center;
+    background: var(--bg); z-index: 10;
+  }
+  .notice-icon { font-size: 56px; margin-bottom: 16px; }
+  .notice-text { color: rgba(255,255,255,0.7); font-size: 16px; line-height: 1.5; max-width: 420px; }
+  .hidden { display: none !important; }
+
+  #rotateNotice { display: none; }
+  @media (orientation: portrait) {
+    #rotateNotice { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<div id="normalLayer">
+  <div class="header">
+    <div class="names" id="names">&nbsp;</div>
+    <div class="date" id="date"></div>
+    <div class="photo-count" id="photoCount"></div>
+  </div>
+  <div class="body">
+    <div class="grid-area" id="gridArea">
+      <div class="rain" id="rain"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="sidebar">
+      <div class="side-title">Estrella de la noche</div>
+      <div id="podium"></div>
+      <div id="missionBox" class="hidden">
+        <div class="side-title">📸 Misión fotográfica</div>
+        <div id="missionList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="momentLayer">
+  <div class="moment-eyebrow" id="momentEyebrow">Foto del momento · ¡Votá desde tu celular!</div>
+  <div class="moment-countdown" id="momentCountdown">15</div>
+  <div class="moment-result hidden" id="momentResult"></div>
+  <div class="moment-photo-box"><img id="momentPhoto" alt=""></div>
+  <div class="moment-bars">
+    <div class="bar-row">
+      <span class="bar-label">❤️ Me encanta</span>
+      <div class="track"><div class="fill" id="likeFill" style="width:0%;background:#2D9D5F;"></div></div>
+      <span class="bar-value" id="likeValue">0% · 0</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">😐 Meh</span>
+      <div class="track"><div class="fill" id="mehFill" style="width:0%;background:#8A8F8C;"></div></div>
+      <span class="bar-value" id="mehValue">0% · 0</span>
+    </div>
+    <div class="moment-total" id="momentTotal">0 votos recibidos</div>
+  </div>
+</div>
+
+<div class="emoji-layer" id="emojiLayer"></div>
+
+<div class="notice hidden" id="errorNotice">
+  <div class="notice-icon">💍</div>
+  <div class="notice-text" id="errorText"></div>
+</div>
+
+<div class="notice" id="rotateNotice">
+  <div class="notice-icon">📐</div>
+  <div class="notice-text">Girá el dispositivo para la vista de proyección</div>
+</div>
+
+<script>
+  // ---------------- Supabase setup ----------------
+  const SUPABASE_URL = 'https://htqwrnhrvvucahhlvfsc.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0cXdybmhydnZ1Y2FoaGx2ZnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTA3NzQsImV4cCI6MjEwNDEyNjc3NH0.VfEPAZx9ynVozFPUu6HAV3k2db4fy7Ye6EvDMKSG3E4'
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  const GRID_COLUMNS = 3
+  const GRID_GAP = 12
+  const MAX_PHOTOS = 12
+  const MEDALS = ['🥇', '🥈', '🥉']
+  const NO_TABLE = 'Sin mesa'
+  const THUMB_COUNT = 10
+  const MAX_FLOATING_EMOJIS = 3
+  const EMOJI_DURATION = 3000
+  const MOMENT_SECONDS = 15
+  const MOMENT_RESULT_MS = 5000
+  const MOMENT_FADE_MS = 500
+  const MOMENT_WIN_THRESHOLD = 70
+  const MOMENT_WIN_POINTS = 150
+
+  const state = {
+    weddingId: null,
+    photos: [],
+    totalCount: 0,
+    pointsRows: [],
+    mission: null,
+    missionItemsCount: 0,
+    missionPhotos: [],
+    moment: null,
+    momentPhoto: null,
+    momentVotes: { likes: 0, mehs: 0 },
+    momentTimer: null,
+    momentResultTimer: null,
+    floatingCount: 0,
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  }
+
+  function showError(text) {
+    document.getElementById('errorText').textContent = text
+    document.getElementById('errorNotice').classList.remove('hidden')
+  }
+
+  // ---------------- Carga inicial ----------------
+  async function init() {
+    const code = (new URLSearchParams(location.search).get('code') || '').trim().toUpperCase()
+    if (!code) {
+      showError('Falta el código de la boda en el link (…/projection.html?code=TUCODIGO)')
+      return
+    }
+
+    const { data: wedding, error } = await sb.from('weddings').select('*')
+      .eq('invite_code', code).maybeSingle()
+    if (error || !wedding) {
+      showError('No encontramos una boda con el código ' + code)
+      return
+    }
+    state.weddingId = wedding.id
+
+    document.getElementById('names').textContent =
+      `${wedding.bride_name || ''} & ${wedding.groom_name || ''}`
+    if (wedding.date) {
+      const formatted = new Date(wedding.date + 'T00:00:00-03:00').toLocaleDateString('es-AR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      })
+      document.getElementById('date').textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1)
+    }
+
+    await Promise.all([loadPhotos(), loadPoints(), loadMission(), loadMoment()])
+    subscribeEmojis()
+  }
+
+  // ---------------- Grid de fotos ----------------
+  async function loadPhotos() {
+    const { data, count } = await sb.from('photos')
+      .select('*', { count: 'exact' })
+      .eq('wedding_id', state.weddingId)
+      .eq('status', 'approved')
+      .order('likes', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(MAX_PHOTOS)
+    state.photos = data || []
+    state.totalCount = typeof count === 'number' ? count : state.photos.length
+    renderGrid(null)
+    renderRain()
+
+    await sb.removeChannel(sb.channel('projection-web-photos'))
+    sb.channel('projection-web-photos')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'photos',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const photo = payload.new
+        if (photo.status !== 'approved') return
+        if (state.photos.some(p => p.id === photo.id)) return
+        state.photos = [photo, ...state.photos].slice(0, MAX_PHOTOS)
+        state.totalCount += 1
+        renderGrid(photo.id)
+        if (state.photos.length <= THUMB_COUNT) renderRain()
+      })
+      .subscribe()
+  }
+
+  // Solo la foto nueva entra con fade-in; el resto se re-renderiza sin animar
+  function renderGrid(newPhotoId) {
+    const n = state.totalCount
+    document.getElementById('photoCount').textContent = `${n} foto${n === 1 ? '' : 's'} de la noche`
+
+    const grid = document.getElementById('grid')
+    if (!state.photos.length) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1 / -1;">Todavía no hay fotos. ¡Sacá la primera!</div>'
+      return
+    }
+    grid.innerHTML = state.photos.map(p => `
+      <div class="tile ${p.id === newPhotoId ? '' : 'no-anim'}">
+        <img src="${escapeHtml(p.url)}" alt="">
+        ${p.likes > 0 ? `<div class="tile-like">❤️ ${p.likes}</div>` : ''}
+        <div class="tile-name">${escapeHtml(p.guest_name || '')}</div>
+      </div>
+    `).join('')
+  }
+
+  // Tamaño de cada foto: entra el grid entero (3x4) sin scroll
+  function sizeGrid() {
+    const area = document.getElementById('gridArea')
+    const rows = Math.ceil(MAX_PHOTOS / GRID_COLUMNS)
+    const byWidth = (area.clientWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS
+    const byHeight = (area.clientHeight - GRID_GAP * (rows - 1)) / rows
+    const tile = Math.max(0, Math.floor(Math.min(byWidth, byHeight)))
+    document.getElementById('grid').style.setProperty('--tile', tile + 'px')
+  }
+
+  // ---------------- Lluvia de miniaturas ----------------
+  function renderRain() {
+    const rain = document.getElementById('rain')
+    if (!state.photos.length) { rain.innerHTML = ''; return }
+    const width = rain.clientWidth || window.innerWidth * 0.65
+    let html = ''
+    for (let i = 0; i < THUMB_COUNT; i++) {
+      const photo = state.photos[i % state.photos.length]
+      const x = Math.random() * Math.max(width - 60, 0)
+      const duration = 14 + Math.random() * 8
+      const delay = -Math.random() * duration
+      html += `<img src="${escapeHtml(photo.url)}" alt=""
+        style="left:${x}px;animation-duration:${duration}s;animation-delay:${delay}s;">`
+    }
+    rain.innerHTML = html
+  }
+
+  // ---------------- Podio por mesa ----------------
+  async function loadPoints() {
+    const { data } = await sb.from('points')
+      .select('guest_name, table_name, points')
+      .eq('wedding_id', state.weddingId)
+    state.pointsRows = data || []
+    renderPodium()
+
+    await sb.removeChannel(sb.channel('projection-web-points'))
+    sb.channel('projection-web-points')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'points',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const row = payload.new
+        state.pointsRows.push({
+          guest_name: row.guest_name,
+          table_name: row.table_name ?? null,
+          points: row.points,
+        })
+        renderPodium()
+      })
+      .subscribe()
+  }
+
+  // Las mesas se agrupan sin distinguir mayúsculas ("mesa 5" = "Mesa 5")
+  function tableLabel(name) {
+    if (name === NO_TABLE || /^mesa\b/i.test(name)) return name
+    return 'Mesa ' + name
+  }
+
+  function renderPodium() {
+    const totals = {}
+    state.pointsRows.forEach(row => {
+      const name = (row.table_name || '').trim() || NO_TABLE
+      const key = name.toLowerCase()
+      if (!totals[key]) totals[key] = { name, points: 0 }
+      totals[key].points += row.points || 0
+    })
+    const top = Object.values(totals).sort((a, b) => b.points - a.points).slice(0, 3)
+    document.getElementById('podium').innerHTML = MEDALS.map((medal, i) => {
+      const entry = top[i]
+      return `
+        <div class="podium-card">
+          <div class="podium-medal">${medal}</div>
+          <div class="podium-name">${entry ? escapeHtml(tableLabel(entry.name)) : '—'}</div>
+          <div class="podium-points">${entry ? entry.points + ' pts' : '—'}</div>
+        </div>
+      `
+    }).join('')
+  }
+
+  // ---------------- Misión fotográfica ----------------
+  async function loadMission() {
+    const { data: m } = await sb.from('photo_missions').select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    await setMission(m || null)
+
+    await sb.removeChannel(sb.channel('projection-web-missions'))
+    sb.channel('projection-web-missions')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'photo_missions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => {
+        const next = payload.new
+        const current = state.mission
+        if (!next || !next.id) return
+        if (current && next.id !== current.id &&
+            new Date(next.created_at) < new Date(current.created_at)) return
+        setMission(next)
+      })
+      .subscribe()
+  }
+
+  async function setMission(m) {
+    const changed = (state.mission && state.mission.id) !== (m && m.id)
+    const wasActive = !!(state.mission && state.mission.status === 'active')
+    state.mission = m
+
+    if (m && (changed || (m.status === 'active' && !wasActive))) {
+      const [{ count }, { data: photos }] = await Promise.all([
+        sb.from('mission_items').select('id', { count: 'exact', head: true }).eq('mission_id', m.id),
+        sb.from('mission_photos').select('item_id, table_name').eq('mission_id', m.id),
+      ])
+      state.missionItemsCount = count || 0
+      state.missionPhotos = photos || []
+    }
+
+    if (changed) {
+      await sb.removeChannel(sb.channel('projection-web-mission-photos'))
+      if (m) {
+        sb.channel('projection-web-mission-photos')
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'mission_photos',
+            filter: `mission_id=eq.${m.id}`
+          }, (payload) => {
+            state.missionPhotos.push(payload.new)
+            renderMission()
+          })
+          .subscribe()
+      }
+    }
+    renderMission()
+  }
+
+  // Progreso por mesa: consignas distintas cumplidas sobre el total
+  function renderMission() {
+    const box = document.getElementById('missionBox')
+    const m = state.mission
+    if (!m || m.status !== 'active') { box.classList.add('hidden'); return }
+    box.classList.remove('hidden')
+
+    const tables = {}
+    state.missionPhotos.forEach(p => {
+      const name = (p.table_name || '').trim()
+      if (!name) return
+      const key = name.toLowerCase()
+      if (!tables[key]) tables[key] = { name, items: new Set() }
+      tables[key].items.add(p.item_id)
+    })
+    const ranking = Object.values(tables).sort((a, b) => b.items.size - a.items.size).slice(0, 5)
+    const total = state.missionItemsCount || 1
+    document.getElementById('missionList').innerHTML = ranking.length
+      ? ranking.map(t => `
+          <div class="mission-row">
+            <span class="mission-table">${escapeHtml(tableLabel(t.name))}</span>
+            <div class="track"><div class="fill" style="width:${Math.min(100, Math.round(t.items.size / total * 100))}%;"></div></div>
+            <span class="mission-count">${t.items.size}/${state.missionItemsCount}</span>
+          </div>
+        `).join('')
+      : '<div class="mission-empty">¡Arrancó la misión! Todavía ninguna mesa subió fotos</div>'
+  }
+
+  // ---------------- Foto del momento ----------------
+  async function loadMoment() {
+    const { data: sess } = await sb.from('photo_moment_sessions').select('*')
+      .eq('wedding_id', state.weddingId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (sess && sess.status === 'active') handleMomentSession(sess)
+
+    await sb.removeChannel(sb.channel('projection-web-moment'))
+    sb.channel('projection-web-moment')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'photo_moment_sessions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => handleMomentSession(payload.new))
+      .subscribe()
+  }
+
+  async function loadMomentVotes(photoId) {
+    const { data } = await sb.from('photo_votes').select('vote')
+      .eq('wedding_id', state.weddingId).eq('photo_id', photoId)
+    const count = { likes: 0, mehs: 0 }
+    ;(data || []).forEach(v => {
+      if (v.vote === 'like') count.likes++
+      else if (v.vote === 'meh') count.mehs++
+    })
+    // Solo si la sesión sigue siendo la que se muestra
+    if (state.moment && state.moment.photo_id === photoId) {
+      state.momentVotes = count
+      renderMoment()
+    }
+  }
+
+  async function handleMomentSession(sess) {
+    if (!sess || !sess.id) return
+    const current = state.moment
+
+    if (sess.status === 'active') {
+      if (current && current.id === sess.id) return
+      clearTimeout(state.momentResultTimer)
+      state.moment = sess
+      state.momentPhoto = null
+      state.momentVotes = { likes: 0, mehs: 0 }
+      document.getElementById('momentPhoto').removeAttribute('src')
+      renderMoment()
+      startMomentCountdown()
+      document.body.classList.add('moment-on')
+
+      const { data: photo } = await sb.from('photos').select('*').eq('id', sess.photo_id).maybeSingle()
+      if (!state.moment || state.moment.id !== sess.id) return
+      state.momentPhoto = photo || null
+      if (photo) document.getElementById('momentPhoto').src = photo.url
+      await loadMomentVotes(sess.photo_id)
+
+      await sb.removeChannel(sb.channel('projection-web-moment-votes'))
+      sb.channel('projection-web-moment-votes')
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'photo_votes',
+          filter: `photo_id=eq.${sess.photo_id}`
+        }, () => loadMomentVotes(sess.photo_id))
+        .subscribe()
+      return
+    }
+
+    // Terminó la sesión que se está mostrando: resultado 5s y vuelta al modo normal
+    if (sess.status === 'ended' && current && current.id === sess.id) {
+      state.moment = sess
+      clearInterval(state.momentTimer)
+      await loadMomentVotes(sess.photo_id)
+      await sb.removeChannel(sb.channel('projection-web-moment-votes'))
+      renderMoment()
+      clearTimeout(state.momentResultTimer)
+      state.momentResultTimer = setTimeout(() => {
+        document.body.classList.remove('moment-on')
+        setTimeout(() => {
+          // Si mientras tanto arrancó otra ronda, no se pisa
+          if (!state.moment || state.moment.id !== sess.id) return
+          state.moment = null
+          state.momentPhoto = null
+        }, MOMENT_FADE_MS)
+      }, MOMENT_RESULT_MS)
+    }
+  }
+
+  function momentSecondsLeft() {
+    const sess = state.moment
+    if (!sess || !sess.started_at) return MOMENT_SECONDS
+    const elapsed = (Date.now() - new Date(sess.started_at).getTime()) / 1000
+    return Math.max(0, Math.ceil(MOMENT_SECONDS - elapsed))
+  }
+
+  function startMomentCountdown() {
+    clearInterval(state.momentTimer)
+    const el = document.getElementById('momentCountdown')
+    el.textContent = momentSecondsLeft()
+    state.momentTimer = setInterval(() => {
+      const left = momentSecondsLeft()
+      el.textContent = left
+      if (left <= 0) clearInterval(state.momentTimer)
+    }, 250)
+  }
+
+  function renderMoment() {
+    const sess = state.moment
+    if (!sess) return
+    const { likes, mehs } = state.momentVotes
+    const total = likes + mehs
+    const likePct = total > 0 ? Math.round(likes / total * 100) : 0
+    const mehPct = total > 0 ? 100 - likePct : 0
+    const ended = sess.status === 'ended'
+    const won = ended && likePct > MOMENT_WIN_THRESHOLD
+    const author = (state.momentPhoto && state.momentPhoto.guest_name) || 'un invitado'
+
+    document.getElementById('likeFill').style.width = likePct + '%'
+    document.getElementById('mehFill').style.width = mehPct + '%'
+    document.getElementById('likeValue').textContent = `${likePct}% · ${likes}`
+    document.getElementById('mehValue').textContent = `${mehPct}% · ${mehs}`
+    document.getElementById('momentTotal').textContent =
+      `${total} ${total === 1 ? 'voto recibido' : 'votos recibidos'}` +
+      (won ? `  ·  ¡+${MOMENT_WIN_POINTS} pts para ${author}!` : '')
+
+    document.getElementById('momentEyebrow').textContent =
+      ended ? 'Resultado final' : 'Foto del momento · ¡Votá desde tu celular!'
+    document.getElementById('momentCountdown').classList.toggle('hidden', ended)
+    const result = document.getElementById('momentResult')
+    result.classList.toggle('hidden', !ended)
+    result.textContent = `${won ? '🏆 ' : ''}📸 Foto de ${author}`
+  }
+
+  // ---------------- Emojis flotantes ----------------
+  async function subscribeEmojis() {
+    await sb.removeChannel(sb.channel('projection-web-emojis'))
+    sb.channel('projection-web-emojis')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'emoji_reactions',
+        filter: `wedding_id=eq.${state.weddingId}`
+      }, (payload) => spawnEmoji(payload.new.emoji))
+      .subscribe()
+  }
+
+  function spawnEmoji(emoji) {
+    if (!emoji || state.floatingCount >= MAX_FLOATING_EMOJIS) return
+    state.floatingCount++
+    const el = document.createElement('div')
+    el.className = 'floating-emoji'
+    el.textContent = emoji
+    el.style.left = Math.random() * Math.max(window.innerWidth - 48, 0) + 'px'
+    document.getElementById('emojiLayer').appendChild(el)
+    setTimeout(() => {
+      el.remove()
+      state.floatingCount--
+    }, EMOJI_DURATION)
+  }
+
+  // ---------------- Arranque ----------------
+  window.addEventListener('resize', () => { sizeGrid(); renderRain() })
+  sizeGrid()
+  init().then(sizeGrid)
+</script>
+</body>
+</html>
