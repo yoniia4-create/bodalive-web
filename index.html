@@ -46,6 +46,23 @@
   }
 
   .screen { animation: fadeIn 0.5s ease; }
+
+  /* Vuelta del OAuth de Mercado Pago */
+  .mp-result {
+    position: fixed; inset: 0; z-index: 200;
+    background: #2D4A3E;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px 24px;
+    animation: fadeIn 0.4s ease;
+  }
+  .mp-result-inner { max-width: 360px; text-align: center; }
+  .mp-result-icon { font-size: 72px; line-height: 1; margin-bottom: 24px; }
+  .mp-result-title {
+    font-family: 'Playfair Display', Georgia, serif; font-style: italic;
+    font-size: 28px; font-weight: 500; color: #fff; margin-bottom: 12px;
+  }
+  .mp-result-sub { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.75); margin-bottom: 32px; }
+  .mp-result-btn { width: 100%; background: var(--gold); color: #fff; }
   .hidden { display: none !important; }
 
   @keyframes fadeIn {
@@ -585,6 +602,16 @@
 <body>
 
 <div class="app-shell">
+
+  <!-- ============ Vuelta del OAuth de Mercado Pago (?mp_connected=) ============ -->
+  <div id="mpResultScreen" class="mp-result hidden" role="dialog" aria-modal="true" aria-labelledby="mpResultTitle">
+    <div class="mp-result-inner">
+      <div class="mp-result-icon" id="mpResultIcon">✅</div>
+      <h1 class="mp-result-title" id="mpResultTitle">¡Mercado Pago conectado!</h1>
+      <p class="mp-result-sub" id="mpResultSub">Los aportes a regalos ahora van directo a tu cuenta. Volvé a la app para continuar.</p>
+      <button type="button" class="btn mp-result-btn" id="mpResultBtn">Volver a la app</button>
+    </div>
+  </div>
 
   <!-- ================= PANTALLA 1 ================= -->
   <div id="screen1" class="screen">
@@ -2860,6 +2887,41 @@
     if (cb) cb()
   }
 
+  // ---------------- Vuelta del OAuth de Mercado Pago ----------------
+  // mp-oauth redirige acá con ?mp_connected=true|false después de que el
+  // novio autoriza (o cancela) en Mercado Pago.
+  const APP_DEEP_LINK = 'wedding-app://admin/my-data'
+  const DEEP_LINK_TIMEOUT_MS = 1500
+
+  function showMpResult(connected) {
+    document.getElementById('mpResultIcon').textContent = connected ? '✅' : '❌'
+    document.getElementById('mpResultTitle').textContent =
+      connected ? '¡Mercado Pago conectado!' : 'No se pudo conectar Mercado Pago'
+    document.getElementById('mpResultSub').textContent = connected
+      ? 'Los aportes a regalos ahora van directo a tu cuenta. Volvé a la app para continuar.'
+      : 'Intentalo de nuevo desde la app'
+    document.getElementById('mpResultBtn').onclick = openAppOrClose
+    document.getElementById('mpResultScreen').classList.remove('hidden')
+
+    // Se saca el parámetro para que recargar no vuelva a mostrar el aviso
+    const url = new URL(location.href)
+    url.searchParams.delete('mp_connected')
+    history.replaceState(null, '', url.pathname + url.search + url.hash)
+  }
+
+  function closeMpResult() {
+    document.getElementById('mpResultScreen').classList.add('hidden')
+  }
+
+  // Intenta abrir la app; si a los 1,5 s la página sigue visible (no hay app
+  // instalada o el navegador bloqueó el link) se muestra el ingreso normal.
+  function openAppOrClose() {
+    setTimeout(() => {
+      if (!document.hidden) closeMpResult()
+    }, DEEP_LINK_TIMEOUT_MS)
+    window.location.href = APP_DEEP_LINK
+  }
+
   // Permitir Enter para ingresar el código
   document.addEventListener('DOMContentLoaded', () => {
     // Link del QR de cada mesa: ?code=INVITE_CODE&mesa=NOMBRE_MESA
@@ -2874,6 +2936,9 @@
       localStorage.setItem('table_name', mesaParam)
       localStorage.setItem('bl_table_name', mesaParam)
     }
+
+    const mpParam = params.get('mp_connected')
+    if (mpParam === 'true' || mpParam === 'false') showMpResult(mpParam === 'true')
 
     document.getElementById('inputCode').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleJoin()
