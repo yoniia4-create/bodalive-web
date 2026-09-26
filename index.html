@@ -47,6 +47,21 @@
 
   .screen { animation: fadeIn 0.5s ease; }
 
+  /* Aviso al volver de un pago */
+  .payment-toast {
+    position: fixed; top: 16px; left: 50%; z-index: 150;
+    transform: translate(-50%, -12px);
+    max-width: calc(100% - 32px);
+    background: #fff; color: var(--primary);
+    font-size: 14px; font-weight: 500; text-align: center;
+    padding: 12px 18px; border-radius: 99px;
+    box-shadow: 0 6px 20px rgba(26,46,40,0.18);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .payment-toast.visible { opacity: 1; transform: translate(-50%, 0); }
+  .payment-toast.payment-toast-error { background: #9B5E5E; color: #fff; }
+
   /* Vuelta del OAuth de Mercado Pago */
   .mp-result {
     position: fixed; inset: 0; z-index: 200;
@@ -612,6 +627,9 @@
       <button type="button" class="btn mp-result-btn" id="mpResultBtn">Volver a la app</button>
     </div>
   </div>
+
+  <!-- Aviso al volver de Mercado Pago -->
+  <div id="paymentToast" class="payment-toast" role="status" aria-live="polite"></div>
 
   <!-- ================= PANTALLA 1 ================= -->
   <div id="screen1" class="screen">
@@ -2818,6 +2836,7 @@
             gift_item_id: item.id,
             guest_name: guestName,
             wedding_id: state.weddingId,
+            wedding_code: state.wedding.invite_code,
           }),
         }
       )
@@ -2827,6 +2846,10 @@
       if (!paymentRes.ok || !paymentData.init_point) {
         throw new Error(paymentData.error || 'No se pudo generar el link de pago')
       }
+
+      // Al volver de Mercado Pago se reingresa con el ?code= de la back_url;
+      // el celular (lo usa la confirmación de asistencia) se recupera de acá.
+      try { sessionStorage.setItem('bl_phone', state.phone || '') } catch (e) {}
 
       if (isMobile) {
         // En mobile redirigimos la misma pestaña: Mercado Pago abre ahí y,
@@ -2890,9 +2913,6 @@
   // ---------------- Vuelta del OAuth de Mercado Pago ----------------
   // mp-oauth redirige acá con ?mp_connected=true|false después de que el
   // novio autoriza (o cancela) en Mercado Pago.
-  const APP_DEEP_LINK = 'wedding-app://admin/my-data'
-  const DEEP_LINK_TIMEOUT_MS = 1500
-
   function showMpResult(connected) {
     document.getElementById('mpResultIcon').textContent = connected ? '✅' : '❌'
     document.getElementById('mpResultTitle').textContent =
@@ -2900,7 +2920,7 @@
     document.getElementById('mpResultSub').textContent = connected
       ? 'Los aportes a regalos ahora van directo a tu cuenta. Volvé a la app para continuar.'
       : 'Intentalo de nuevo desde la app'
-    document.getElementById('mpResultBtn').onclick = openAppOrClose
+    document.getElementById('mpResultBtn').onclick = backToEntry
     document.getElementById('mpResultScreen').classList.remove('hidden')
 
     // Se saca el parámetro para que recargar no vuelva a mostrar el aviso
@@ -2913,13 +2933,54 @@
     document.getElementById('mpResultScreen').classList.add('hidden')
   }
 
-  // Intenta abrir la app; si a los 1,5 s la página sigue visible (no hay app
-  // instalada o el navegador bloqueó el link) se muestra el ingreso normal.
-  function openAppOrClose() {
-    setTimeout(() => {
-      if (!document.hidden) closeMpResult()
-    }, DEEP_LINK_TIMEOUT_MS)
-    window.location.href = APP_DEEP_LINK
+  // Limpia la URL y deja a la vista la pantalla de ingreso (queda debajo del aviso)
+  function backToEntry() {
+    window.history.replaceState({}, '', '/')
+    closeMpResult()
+  }
+
+  // ---------------- Vuelta de Mercado Pago después de un aporte ----------------
+  const PAYMENT_MESSAGES = {
+    success: { text: '¡Aporte registrado! Gracias 💚', ms: 3000, error: false },
+    pending: { text: 'Tu pago quedó pendiente de acreditación. ¡Gracias! 💚', ms: 4000, error: false },
+    failure: { text: 'El pago no se completó. Podés intentarlo de nuevo.', ms: 5000, error: true },
+  }
+
+  // Reingresa a la boda con el código de la back_url, sin pedirlo de nuevo.
+  // Si el código no existe queda la pantalla de ingreso con el código cargado.
+  async function returnFromPayment(code, payment) {
+    const screen1 = document.getElementById('screen1')
+    screen1.classList.add('hidden')
+
+    // Se limpia ?payment= para que recargar no repita el mensaje
+    const url = new URL(location.href)
+    url.searchParams.delete('payment')
+    history.replaceState(null, '', url.pathname + url.search + url.hash)
+
+    try {
+      const { data, error } = await sb.from('weddings').select('*')
+        .eq('invite_code', code).single()
+      if (error || !data) throw new Error('Boda no encontrada')
+
+      state.wedding = data
+      state.weddingId = data.id
+      try { state.phone = sessionStorage.getItem('bl_phone') || '' } catch (e) { state.phone = '' }
+
+      await enterWedding()
+      const msg = PAYMENT_MESSAGES[payment]
+      showPaymentToast(msg.text, msg.ms, msg.error)
+    } catch (e) {
+      screen1.classList.remove('hidden')
+    }
+  }
+
+  function showPaymentToast(text, ms, isError) {
+    const toast = document.getElementById('paymentToast')
+    toast.textContent = text
+    toast.classList.toggle('payment-toast-error', isError)
+    toast.classList.add('visible')
+    clearTimeout(showPaymentToast.timer)
+    showPaymentToast.timer = setTimeout(() => toast.classList.remove('visible'), ms)
   }
 
   // Permitir Enter para ingresar el código
@@ -2939,6 +3000,10 @@
 
     const mpParam = params.get('mp_connected')
     if (mpParam === 'true' || mpParam === 'false') showMpResult(mpParam === 'true')
+
+    // Vuelta de Mercado Pago (back_urls de create-payment): ?code=…&payment=…
+    const paymentParam = params.get('payment')
+    if (codeParam && PAYMENT_MESSAGES[paymentParam]) returnFromPayment(codeParam, paymentParam)
 
     document.getElementById('inputCode').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleJoin()
