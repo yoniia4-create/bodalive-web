@@ -1445,6 +1445,24 @@
     localStorage.setItem('bl_guest_name', name)
     document.getElementById('gamesGuestName').value = name
 
+    // Aviso por email a los novios (solo confirmaciones). Sin `to`: la función
+    // se lo manda a los novios de la boda. No se espera ni se muestra si falla.
+    if (state.rsvp.attending) {
+      sb.functions.invoke('send-email', {
+        body: {
+          type: 'rsvp_confirmed',
+          data: {
+            invite_code: state.wedding.invite_code,
+            bride_name: state.wedding.bride_name,
+            groom_name: state.wedding.groom_name,
+            guest_name: name,
+            plus_ones: payload.plus_ones,
+            menu_choice: payload.menu_choice,
+          },
+        },
+      }).catch(() => {})
+    }
+
     document.getElementById('rsvpForm').classList.add('hidden')
     const successBox = document.getElementById('rsvpSuccess')
     successBox.classList.remove('hidden')
